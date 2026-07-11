@@ -21,6 +21,7 @@ class RetroAudioEngine {
   playStartup() {
     this.init();
     const now = this.ctx.currentTime;
+    
     // Vista Startup Chord: Eb major add9 / Ab major vibe
     const notes = [220, 330, 440, 554, 659, 880]; 
     notes.forEach((freq, index) => {
