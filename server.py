@@ -197,6 +197,11 @@ class DuoLingoRetroServer(SimpleHTTPRequestHandler):
         
         friends_str = ", ".join(friends_status) if friends_status else "xX_SpanishPro_Xx (Rank 1, 950 XP), GrammarCop (Rank 2, 780 XP), Vistafan99 (Rank 3, 450 XP)"
         
+        is_hint_request = state.get("isHintRequest", False)
+        hint_prompt = state.get("hintPrompt", "")
+        hint_answer = state.get("hintAnswer", "")
+        hints_count = state.get("hintsCount", 1)
+        
         if user_message:
             prompt = (
                 f"{system_prompt}\n\n"
@@ -210,6 +215,16 @@ class DuoLingoRetroServer(SimpleHTTPRequestHandler):
                 f"2. If they make excuses (like being tired, sleeping, or busy), roast them hard and compare them to xX_SpanishPro_Xx or GrammarCop who are studying right now.\n"
                 f"3. If they ask a general question, give a witty/sarcastic answer in character.\n"
                 f"4. Keep it strictly to 1-3 sentences. Use nostalgic 2006 net-speak and MSN style emoticons."
+            )
+        elif is_hint_request:
+            prompt = (
+                f"{system_prompt}\n\n"
+                f"The user is stuck on their current Spanish practice question and has paid hearts/lingots for a hint clue from you.\n"
+                f"Question details/prompt: {hint_prompt}\n"
+                f"Correct Answer / expected solution: {hint_answer}\n"
+                f"This is hint #{hints_count} they have requested for this question.\n\n"
+                f"Generate a helpful, smart clue, explanation, grammar rule, or tip to help them solve it, WITHOUT explicitly giving away the exact Spanish words or final translation.\n"
+                f"Roast them slightly for needing help, keep it to 1-3 sentences. Use nostalgic 2006 net-speak and emoticons."
             )
         elif just_completed_quiz:
             prompt = (

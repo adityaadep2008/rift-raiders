@@ -1031,6 +1031,7 @@ let currentExerciseIndex = 0;
 let lessonHearts = 5;
 let lessonCombo = 0;
 let activeExercises = [];
+let hintsTakenInCurrentExercise = 0;
 
 let activeLectureSlides = [];
 let currentPptSlideIndex = 0;
@@ -1667,6 +1668,7 @@ function launchQuizMode() {
 
 function loadExercise(index) {
   currentExerciseIndex = index;
+  hintsTakenInCurrentExercise = 0;
   
   const pct = (index / 5) * 100;
   document.getElementById('lesson-progress-bar').style.width = `${pct}%`;
@@ -1717,29 +1719,43 @@ function loadExercise(index) {
   document.getElementById('btn-next-exercise').classList.add('hidden');
 }
 
-function resetHeartsUI() {
+function renderHeartsUI() {
   for (let i = 1; i <= 5; i++) {
     const el = document.getElementById(`heart-${i}`);
-    el.innerText = '❤️';
-    el.classList.remove('shattered');
+    if (!el) continue;
+    
+    if (lessonHearts >= i) {
+      el.innerText = '❤️';
+      el.classList.remove('shattered');
+      el.classList.remove('half-shattered');
+    } else if (lessonHearts > i - 1) {
+      // Half heart
+      el.innerText = '💔';
+      el.classList.remove('shattered');
+      el.classList.add('half-shattered');
+    } else {
+      // Empty heart
+      el.innerText = '🖤';
+      el.classList.add('shattered');
+      el.classList.remove('half-shattered');
+    }
   }
 }
 
+function resetHeartsUI() {
+  lessonHearts = 5.0;
+  renderHeartsUI();
+}
+
 function decrementHearts() {
-  if (lessonHearts <= 0) return;
-  
-  const targetHeart = document.getElementById(`heart-${lessonHearts}`);
-  if (targetHeart) {
-    targetHeart.innerText = '💔';
-    targetHeart.classList.add('shattered');
-  }
-  
-  lessonHearts--;
+  lessonHearts = Math.max(0, lessonHearts - 1.0);
   lessonCombo = 0;
   updateComboUI();
   
   audio.playError();
   logToConsole(`[PHP] $_SESSION['hearts'] decrement -> ${lessonHearts}.`, 'warning');
+  
+  renderHeartsUI();
   
   if (lessonHearts <= 0) {
     handleGameOver();
@@ -2368,6 +2384,74 @@ function revealExerciseAnswer() {
   }
 }
 
+function getExerciseHint() {
+  if (lessonHearts < 0.5) {
+    alert("You don't have enough hearts left to get a hint!");
+    return;
+  }
+  
+  const isSecondHint = hintsTakenInCurrentExercise >= 1;
+  
+  if (isSecondHint) {
+    if (db.users.lingots < 1) {
+      alert("Taking a second hint requires 1 Lingot point. Go practice to earn more!");
+      return;
+    }
+    
+    lessonHearts = Math.max(0, lessonHearts - 0.5);
+    db.users.lingots -= 1;
+    logToConsole(`[HINT] Second hint taken. Sacrificed 0.5 hearts and 1 Lingot.`);
+  } else {
+    lessonHearts = Math.max(0, lessonHearts - 0.5);
+    logToConsole(`[HINT] First hint taken. Sacrificed 0.5 hearts.`);
+  }
+  
+  hintsTakenInCurrentExercise += 1;
+  renderHeartsUI();
+  updateDashboardUI();
+  
+  if (lessonHearts <= 0) {
+    handleGameOver();
+    return;
+  }
+  
+  requestDuoHintClue();
+}
+
+function requestDuoHintClue() {
+  const ex = activeExercises[currentExerciseIndex];
+  let promptText = "";
+  let answerText = "";
+  
+  if (ex.type === 'drag-drop') {
+    promptText = `Translate this sentence: "${ex.source}"`;
+    const expectedWords = ex.expected.map(blockId => {
+      const blockEl = document.getElementById(blockId);
+      return blockEl ? blockEl.innerText : blockId;
+    });
+    answerText = expectedWords.join(' ');
+  } else if (ex.type === 'pair-matching') {
+    promptText = "Match corresponding Spanish and English words";
+    answerText = ex.pairs.map(p => `${p.sp} = ${p.en}`).join(', ');
+  } else if (ex.type === 'mic-check') {
+    promptText = "Pronounce this Spanish sentence aloud";
+    answerText = ex.speech;
+  } else if (ex.type === 'listening') {
+    promptText = "Listen to the audio clip and transcribe it";
+    answerText = ex.audioPhrase;
+  } else if (ex.type === 'translation') {
+    promptText = `Translate this sentence: "${ex.source}"`;
+    answerText = ex.expected.join(' OR ');
+  }
+  
+  triggerManualGuiltTrip({
+    isHintRequest: true,
+    hintPrompt: promptText,
+    hintAnswer: answerText,
+    hintsCount: hintsTakenInCurrentExercise
+  });
+}
+
 
 // ==========================================================================
 // 9. MSN Messenger alerts & Guilt-Trip engine
@@ -2542,7 +2626,7 @@ function clearTypewriter() {
 function triggerManualGuiltTrip(options = {}) {
   // If this is a background interval check, we don't interrupt active speech.
   // Otherwise (user chat, just completed quiz, or force), we clear and speak.
-  const isBackground = !options.userMessage && !options.justCompletedQuiz && !options.force;
+  const isBackground = !options.userMessage && !options.justCompletedQuiz && !options.isHintRequest && !options.force;
   if (isBackground && isDuoSpeaking) return;
   
   clearTypewriter();
@@ -2597,7 +2681,11 @@ function triggerManualGuiltTrip(options = {}) {
     completedQuizzes: completedQuizzesCount,
     justCompletedQuiz: !!options.justCompletedQuiz,
     userMessage: options.userMessage || null,
-    leaderboard: db.bbs_leaderboard
+    leaderboard: db.bbs_leaderboard,
+    isHintRequest: !!options.isHintRequest,
+    hintPrompt: options.hintPrompt || null,
+    hintAnswer: options.hintAnswer || null,
+    hintsCount: options.hintsCount || 0
   };
   
   fetch('/api/guilt-trip', {

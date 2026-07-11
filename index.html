@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DuoLingo 2006 Edition - Retro Reboot</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=2026-07-12">
   <script>
     window.addEventListener('error', function(e) {
       var div = document.createElement('div');
@@ -548,13 +548,14 @@
                 <!-- Check answer panel footer -->
                 <div class="exercise-actions">
                   <span class="exercise-message" id="exercise-message"></span>
-                  <div style="display: flex; align-items: center;">
-                    <span class="cheat-link" onclick="revealExerciseAnswer()" style="color: #0053e2; text-decoration: underline; cursor: pointer; font-size: 11px; margin-right: 15px; font-weight: bold; font-family: var(--font-sans);">Reveal Answer (Duo Hint)</span>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <button class="exercise-submit-btn" id="btn-get-hint" onclick="getExerciseHint()" style="background: var(--silver-gradient); border-color: #999; color: #333; text-shadow: 0 1px #fff; padding: 6px 12px; font-size: 11px; height: auto;">💡 Get Hint</button>
                     <button class="exercise-submit-btn" id="btn-check-answer" onclick="checkExerciseAnswer()">Check Answer</button>
                     <button class="exercise-submit-btn hidden" id="btn-next-exercise" onclick="nextExercise()">Next Exercise &gt;&gt;</button>
                   </div>
                 </div>
               </div>
+              <span class="dev-bypass-link" onclick="revealExerciseAnswer()" style="position: absolute; bottom: 8px; left: 8px; color: #bbb; text-decoration: none; cursor: pointer; font-size: 8px; font-family: var(--font-mono); z-index: 10;">[ DEV BYPASS ]</span>
             </div>
           </div>
 
@@ -756,6 +757,6 @@
     </div> <!-- CRT Bezel End -->
   </div> <!-- CRT Monitor Frame End -->
 
-  <script src="app.js"></script>
+  <script src="app.js?v=2026-07-12"></script>
 </body>
 </html>

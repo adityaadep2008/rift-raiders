@@ -981,6 +981,11 @@ body {
   transform: scale(0.8) rotate(15deg);
 }
 
+.heart-slot.half-shattered {
+  filter: opacity(0.75) sepia(0.3);
+  transform: scale(0.9) rotate(-8deg);
+}
+
 .combo-meter-widget {
   background: #333;
   color: #39ff14; /* Matrix Green */
