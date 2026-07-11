@@ -10,6 +10,7 @@ class RetroAudioEngine {
   constructor() {
     this.ctx = null;
     this.bgMusicRunning = false;
+    this.bgAudio = null;
   }
 
   init() {
@@ -43,7 +44,7 @@ class RetroAudioEngine {
     }
   }
 
-  // Synthesized Frutinger Aero Nature Background Music (pads & bird chirps)
+  // Load and play backgroundsound.mp3 loop, keeping synthesized bird chirps intact!
   playBackgroundMusic() {
     this.init();
     if (!this.ctx) return;
@@ -51,25 +52,17 @@ class RetroAudioEngine {
     if (this.bgMusicRunning) return;
     this.bgMusicRunning = true;
     
-    // Soft Ambient Pad progression chord player
-    const playChord = (freqs, duration) => {
-      const now = this.ctx.currentTime;
-      const gainNode = this.ctx.createGain();
-      gainNode.gain.setValueAtTime(0, now);
-      gainNode.gain.linearRampToValueAtTime(0.04, now + 2.0); // soft volume pad
-      gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-      
-      freqs.forEach(freq => {
-        const osc = this.ctx.createOscillator();
-        osc.type = 'triangle'; // smooth retro pad tone
-        osc.frequency.setValueAtTime(freq, now);
-        osc.connect(gainNode);
-        osc.start(now);
-        osc.stop(now + duration);
-      });
-      
-      gainNode.connect(this.ctx.destination);
-    };
+    if (!this.bgAudio) {
+      this.bgAudio = new Audio('backgroundsound.mp3');
+      this.bgAudio.loop = true;
+      this.bgAudio.volume = 0.25; // soft background music volume
+    }
+    
+    this.bgAudio.play().then(() => {
+      logToConsole(`[PHP] audio_bg_music: playing backgroundsound.mp3 loop.`, 'info');
+    }).catch(err => {
+      logToConsole(`[PHP WARNING] backgroundsound.mp3 play block: ${err.message}`, 'warning');
+    });
     
     // Bird chirp synthesizer loop
     const playBirdChirp = () => {
@@ -93,7 +86,7 @@ class RetroAudioEngine {
         osc.frequency.exponentialRampToValueAtTime(endFreq, startTime + chirpDelay + 0.08);
         
         gainNode.gain.setValueAtTime(0, startTime + chirpDelay);
-        gainNode.gain.linearRampToValueAtTime(0.015, startTime + chirpDelay + 0.02);
+        gainNode.gain.linearRampToValueAtTime(0.012, startTime + chirpDelay + 0.02);
         gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + chirpDelay + 0.08);
         
         osc.connect(gainNode);
@@ -103,32 +96,19 @@ class RetroAudioEngine {
         osc.stop(startTime + chirpDelay + 0.08);
       }
       
-      // schedule next chirp sweep in 9-16s
-      setTimeout(playBirdChirp, (9 + Math.random() * 7) * 1000);
+      // schedule next chirp sweep in 8-15s
+      setTimeout(playBirdChirp, (8 + Math.random() * 7) * 1000);
     };
     
-    // Ambient chords progression: Cmaj9 -> Fmaj9
-    const chords = [
-      [261.63, 329.63, 392.00, 493.88, 587.33], // Cmaj9
-      [349.23, 440.00, 523.25, 659.25, 783.99]  // Fmaj9
-    ];
-    let chordIndex = 0;
-    
-    const runChordLoop = () => {
-      if (!this.bgMusicRunning || !this.ctx || this.ctx.state === 'suspended') return;
-      playChord(chords[chordIndex], 8.0);
-      chordIndex = (chordIndex + 1) % chords.length;
-      setTimeout(runChordLoop, 8000);
-    };
-    
-    runChordLoop();
     setTimeout(playBirdChirp, 1500);
-    logToConsole(`[PHP] audio_bg_music: Background bird ambient loop synthesized.`, 'info');
   }
 
   stopBackgroundMusic() {
     this.bgMusicRunning = false;
-    logToConsole(`[PHP] audio_bg_music: Background music stopped.`, 'info');
+    if (this.bgAudio) {
+      this.bgAudio.pause();
+    }
+    logToConsole(`[PHP] audio_bg_music: backgroundsound.mp3 stopped.`, 'info');
   }
 
   // Windows Vista/XP inspired Startup Chime
@@ -365,7 +345,12 @@ const db = {
     'basics-1': { completed: false, current_step: 3, total_steps: 5, vocab: ["el niño", "come", "una manzana", "leche", "bebe"] },
     'phrases': { completed: false, current_step: 0, total_steps: 5, vocab: ["hola", "cómo estás", "gracias", "adiós"] },
     'food': { completed: false, locked: true, vocab: ["pan", "queso", "fruta", "agua"] },
+    'travel': { completed: false, locked: true, vocab: ["avión", "tren", "maleta", "viaje"] },
     'animals': { completed: false, locked: true, vocab: ["perro", "gato", "pájaro", "caballo", "pez"] },
+    'clothing': { completed: false, locked: true, vocab: ["camisa", "zapatos", "pantalones", "sombrero"] },
+    'sports': { completed: false, locked: true, vocab: ["fútbol", "tenis", "correr", "juego"] },
+    'colors': { completed: false, locked: true, vocab: ["rojo", "azul", "verde", "amarillo"] },
+    'tech': { completed: false, locked: true, vocab: ["computadora", "ratón", "teclado", "pantalla"] },
     'hobby': { completed: false, locked: true, vocab: [] }
   }
 };
@@ -398,12 +383,42 @@ const lectureDecks = {
     { word: "fruta", english: "Fruit", example: "Example: 'La manzana es una fruta' (The apple is a fruit)" },
     { word: "agua", english: "Water", example: "Example: 'El perro bebe agua' (The dog drinks water)" }
   ],
+  'travel': [
+    { word: "avión", english: "Airplane", example: "Example: 'El avión es grande' (The airplane is big)" },
+    { word: "tren", english: "Train", example: "Example: 'El tren llega a la estación' (The train arrives at the station)" },
+    { word: "maleta", english: "Suitcase", example: "Example: 'Yo llevo una maleta' (I carry a suitcase)" },
+    { word: "viaje", english: "Trip/Journey", example: "Example: 'Buen viaje, amigo' (Have a good trip, friend)" }
+  ],
   'animals': [
     { word: "perro", english: "Dog", example: "Example: 'El perro y el gato' (The dog and the cat)" },
     { word: "gato", english: "Cat", example: "Example: 'El gato bebe leche' (The cat drinks milk)" },
     { word: "pájaro", english: "Bird", example: "Example: 'El pájaro vuela' (The bird flies)" },
     { word: "caballo", english: "Horse", example: "Example: 'El caballo corre rápido' (The horse runs fast)" },
     { word: "pez", english: "Fish", example: "Example: 'El pez vive en the water' (The fish lives in the water)" }
+  ],
+  'clothing': [
+    { word: "camisa", english: "Shirt", example: "Example: 'La camisa es blanca' (The shirt is white)" },
+    { word: "zapatos", english: "Shoes", example: "Example: 'Los zapatos son negros' (The shoes are black)" },
+    { word: "pantalones", english: "Pants", example: "Example: 'El niño lleva pantalones' (The boy wears pants)" },
+    { word: "sombrero", english: "Hat", example: "Example: 'El sombrero es elegante' (The hat is elegant)" }
+  ],
+  'sports': [
+    { word: "fútbol", english: "Soccer", example: "Example: 'Me gusta jugar al fútbol' (I like to play soccer)" },
+    { word: "tenis", english: "Tennis", example: "Example: 'El tenis es un deporte' (Tennis is a sport)" },
+    { word: "correr", english: "To run", example: "Example: 'Me gusta correr en el parque' (I like to run in the park)" },
+    { word: "juego", english: "Game", example: "Example: 'El juego de fútbol' (The soccer game)" }
+  ],
+  'colors': [
+    { word: "rojo", english: "Red", example: "Example: 'La manzana es roja' (The apple is red)" },
+    { word: "azul", english: "Blue", example: "Example: 'El cielo es azul' (The sky is blue)" },
+    { word: "verde", english: "Green", example: "Example: 'El césped es verde' (The grass is green)" },
+    { word: "amarillo", english: "Yellow", example: "Example: 'El sol es amarillo' (The sun is yellow)" }
+  ],
+  'tech': [
+    { word: "computadora", english: "Computer", example: "Example: 'Yo uso la computadora' (I use the computer)" },
+    { word: "ratón", english: "Mouse", example: "Example: 'El ratón de la computadora' (The computer mouse)" },
+    { word: "teclado", english: "Keyboard", example: "Example: 'El teclado tiene teclas' (The keyboard has keys)" },
+    { word: "pantalla", english: "Screen/Monitor", example: "Example: 'La pantalla es brillante' (The screen is bright)" }
   ],
   'hobby-golf': [
     { word: "hoyo", english: "Hole", example: "Example: 'La pelota está en el hoyo' (The ball is in the hole)" },
@@ -492,9 +507,12 @@ function resetDatabaseState() {
   db.lessons['basics-1'].current_step = 3;
   db.lessons['phrases'].completed = false;
   db.lessons['phrases'].current_step = 0;
-  db.lessons['food'].locked = true;
-  db.lessons['animals'].locked = true;
-  db.lessons['hobby'].locked = true;
+  
+  const list = ['food', 'travel', 'animals', 'clothing', 'sports', 'colors', 'tech', 'hobby'];
+  list.forEach(node => {
+    db.lessons[node].completed = false;
+    db.lessons[node].locked = true;
+  });
   db.lessons['hobby'].completed = false;
   
   document.getElementById('buy-tracksuit-btn').innerText = 'Buy (5 Lingots)';
@@ -688,44 +706,48 @@ function updateDashboardUI() {
     freezeBadge.style.display = 'none';
   }
   
-  document.getElementById('status-basics-1').innerText = db.lessons['basics-1'].completed ? 'Completed' : `${db.lessons['basics-1'].current_step}/5 Exercises`;
-  document.getElementById('status-phrases').innerText = db.lessons['phrases'].completed ? 'Completed' : `${db.lessons['phrases'].current_step}/5 Exercises`;
+  document.getElementById('status-basics-1').innerText = db.lessons['basics-1'].completed ? 'Completed' : `${db.lessons['basics-1'].current_step || 0}/5 Exercises`;
+  document.getElementById('status-phrases').innerText = db.lessons['phrases'].completed ? 'Completed' : `${db.lessons['phrases'].current_step || 0}/5 Exercises`;
   
-  const foodNode = document.getElementById('node-food');
-  const animalsNode = document.getElementById('node-animals');
-  const basicModulesDone = db.lessons['basics-1'].completed && db.lessons['phrases'].completed;
+  const updateNodeState = (nodeId, isUnlocked, icon) => {
+    const el = document.getElementById(`node-${nodeId}`);
+    if (!el) return;
+    db.lessons[nodeId].locked = !isUnlocked;
+    const iconEl = el.querySelector('.node-icon');
+    const statusEl = document.getElementById(`status-${nodeId}`);
+    if (isUnlocked) {
+      el.classList.remove('locked');
+      if (iconEl) iconEl.innerText = icon;
+      if (statusEl) {
+        statusEl.innerText = db.lessons[nodeId].completed ? 'Completed' : `${db.lessons[nodeId].current_step || 0}/5 Exercises`;
+      }
+    } else {
+      el.classList.add('locked');
+      if (iconEl) iconEl.innerText = '🔒';
+      if (statusEl) {
+        statusEl.innerText = 'Locked';
+      }
+    }
+  };
+
+  // Branching Lock Calculations
+  updateNodeState('food', db.lessons['basics-1'].completed, '🍖');
+  updateNodeState('travel', db.lessons['basics-1'].completed || db.lessons['phrases'].completed, '✈️');
+  updateNodeState('animals', db.lessons['phrases'].completed, '🦁');
   
-  if (basicModulesDone) {
-    db.lessons['food'].locked = false;
-    db.lessons['animals'].locked = false;
-    
-    foodNode.classList.remove('locked');
-    foodNode.querySelector('.node-icon').innerText = '🍖';
-    document.getElementById('status-food').innerText = db.lessons['food'].completed ? 'Completed' : '0/5 Exercises';
-    
-    animalsNode.classList.remove('locked');
-    animalsNode.querySelector('.node-icon').innerText = '🦁';
-    document.getElementById('status-animals').innerText = db.lessons['animals'].completed ? 'Completed' : '0/5 Exercises';
-  } else {
-    foodNode.classList.add('locked');
-    foodNode.querySelector('.node-icon').innerText = '🔒';
-    document.getElementById('status-food').innerText = 'Locked';
-    
-    animalsNode.classList.add('locked');
-    animalsNode.querySelector('.node-icon').innerText = '🔒';
-    document.getElementById('status-animals').innerText = 'Locked';
-  }
-  
+  updateNodeState('clothing', db.lessons['food'].completed, '👕');
+  updateNodeState('sports', db.lessons['travel'].completed, '⚽');
+  updateNodeState('colors', db.lessons['animals'].completed, '🎨');
+  updateNodeState('tech', db.lessons['animals'].completed, '💻');
+
   // Custom Hobby Node injection
   const hobbyNode = document.getElementById('node-hobby');
-  const hobbyConnector = document.getElementById('tree-connector-hobbies-row');
   const hobbyTitle = document.getElementById('node-hobby-title');
   const hobbyIcon = document.getElementById('node-hobby-icon');
   const hobbyStatus = document.getElementById('status-hobby');
   
-  if (db.users.hobby) {
+  if (db.users.hobby && hobbyNode) {
     hobbyNode.style.display = 'flex';
-    hobbyConnector.style.display = 'flex';
     
     const hobbyNames = {
       golf: { title: 'Golf Spanish', icon: '⛳' },
@@ -735,18 +757,20 @@ function updateDashboardUI() {
     };
     
     const info = hobbyNames[db.users.hobby];
-    hobbyTitle.innerText = info.title;
+    if (hobbyTitle) hobbyTitle.innerText = info.title;
     
-    if (basicModulesDone || !db.lessons['hobby'].locked) {
+    const advancedModulesDone = db.lessons['clothing'].completed || db.lessons['sports'].completed || db.lessons['colors'].completed || db.lessons['tech'].completed;
+    
+    if (advancedModulesDone || !db.lessons['hobby'].locked) {
       db.lessons['hobby'].locked = false;
       hobbyNode.classList.remove('locked');
-      hobbyIcon.innerText = info.icon;
-      hobbyStatus.innerText = db.lessons['hobby'].completed ? 'Completed' : '0/5 Exercises';
+      if (hobbyIcon) hobbyIcon.innerText = info.icon;
+      if (hobbyStatus) hobbyStatus.innerText = db.lessons['hobby'].completed ? 'Completed' : '0/5 Exercises';
     } else {
       db.lessons['hobby'].locked = true;
       hobbyNode.classList.add('locked');
-      hobbyIcon.innerText = '🔒';
-      hobbyStatus.innerText = 'Locked';
+      if (hobbyIcon) hobbyIcon.innerText = '🔒';
+      if (hobbyStatus) hobbyStatus.innerText = 'Locked';
     }
   }
   
@@ -1020,6 +1044,186 @@ function generateDynamicExercises(lessonId) {
         type: 'translation',
         source: "The bird drinks water",
         expected: ["el pájaro bebe agua", "pájaro bebe agua"]
+      }
+    ];
+  }
+
+  if (lessonId === 'travel') {
+    return [
+      {
+        type: 'drag-drop',
+        source: "The airplane is big",
+        expected: ['block-el-avion', 'block-es', 'block-grande'],
+        blocks: ['el avión', 'es', 'grande', 'tren', 'maleta', 'viaje']
+      },
+      {
+        type: 'pair-matching',
+        pairs: [
+          { text: 'Avión', pair: 1 }, { text: 'Airplane', pair: 1 },
+          { text: 'Tren', pair: 2 }, { text: 'Train', pair: 2 },
+          { text: 'Maleta', pair: 3 }, { text: 'Suitcase', pair: 3 },
+          { text: 'Viaje', pair: 4 }, { text: 'Trip', pair: 4 }
+        ]
+      },
+      {
+        type: 'mic-check',
+        speech: "Buen viaje, mi amigo"
+      },
+      {
+        type: 'listening',
+        audioPhrase: "Yo llevo una maleta grande",
+        expectedText: "yo llevo una maleta grande",
+        expectedBlocks: ['listening-yo', 'listening-llevo', 'listening-una', 'listening-maleta', 'listening-grande'],
+        blocks: ['Yo', 'llevo', 'una', 'maleta', 'grande', 'tren', 'avión']
+      },
+      {
+        type: 'translation',
+        source: "The train arrives",
+        expected: ["el tren llega", "tren llega"]
+      }
+    ];
+  }
+
+  if (lessonId === 'clothing') {
+    return [
+      {
+        type: 'drag-drop',
+        source: "The shirt is white",
+        expected: ['block-la-camisa', 'block-es', 'block-blanca'],
+        blocks: ['la camisa', 'es', 'blanca', 'zapatos', 'sombrero', 'pantalones']
+      },
+      {
+        type: 'pair-matching',
+        pairs: [
+          { text: 'Camisa', pair: 1 }, { text: 'Shirt', pair: 1 },
+          { text: 'Zapatos', pair: 2 }, { text: 'Shoes', pair: 2 },
+          { text: 'Pantalones', pair: 3 }, { text: 'Pants', pair: 3 },
+          { text: 'Sombrero', pair: 4 }, { text: 'Hat', pair: 4 }
+        ]
+      },
+      {
+        type: 'mic-check',
+        speech: "El sombrero es muy elegante"
+      },
+      {
+        type: 'listening',
+        audioPhrase: "El niño lleva pantalones",
+        expectedText: "el niño lleva pantalones",
+        expectedBlocks: ['listening-el', 'listening-nino', 'listening-lleva', 'listening-pantalones'],
+        blocks: ['El', 'niño', 'lleva', 'pantalones', 'camisa', 'zapatos']
+      },
+      {
+        type: 'translation',
+        source: "I wear shoes",
+        expected: ["yo llevo zapatos", "llevo zapatos"]
+      }
+    ];
+  }
+
+  if (lessonId === 'sports') {
+    return [
+      {
+        type: 'drag-drop',
+        source: "The soccer game",
+        expected: ['block-el-juego', 'block-de', 'block-futbol'],
+        blocks: ['el juego', 'de', 'fútbol', 'tenis', 'correr', 'pelota']
+      },
+      {
+        type: 'pair-matching',
+        pairs: [
+          { text: 'Fútbol', pair: 1 }, { text: 'Soccer', pair: 1 },
+          { text: 'Tenis', pair: 2 }, { text: 'Tennis', pair: 2 },
+          { text: 'Correr', pair: 3 }, { text: 'To run', pair: 3 },
+          { text: 'Juego', pair: 4 }, { text: 'Game', pair: 4 }
+        ]
+      },
+      {
+        type: 'mic-check',
+        speech: "Me gusta correr en el parque"
+      },
+      {
+        type: 'listening',
+        audioPhrase: "El tenis es un deporte",
+        expectedText: "el tenis es un deporte",
+        expectedBlocks: ['listening-el', 'listening-tenis', 'listening-es', 'listening-un', 'listening-deporte'],
+        blocks: ['El', 'tenis', 'es', 'un', 'deporte', 'fútbol', 'correr']
+      },
+      {
+        type: 'translation',
+        source: "I play soccer",
+        expected: ["juego al fútbol", "yo juego fútbol", "juego fútbol"]
+      }
+    ];
+  }
+
+  if (lessonId === 'colors') {
+    return [
+      {
+        type: 'drag-drop',
+        source: "The apple is red",
+        expected: ['block-la-manzana', 'block-es', 'block-roja'],
+        blocks: ['la manzana', 'es', 'roja', 'azul', 'verde', 'amarillo']
+      },
+      {
+        type: 'pair-matching',
+        pairs: [
+          { text: 'Rojo', pair: 1 }, { text: 'Red', pair: 1 },
+          { text: 'Azul', pair: 2 }, { text: 'Blue', pair: 2 },
+          { text: 'Verde', pair: 3 }, { text: 'Green', pair: 3 },
+          { text: 'Amarillo', pair: 4 }, { text: 'Yellow', pair: 4 }
+        ]
+      },
+      {
+        type: 'mic-check',
+        speech: "El sol es amarillo"
+      },
+      {
+        type: 'listening',
+        audioPhrase: "El cielo es azul",
+        expectedText: "el cielo es azul",
+        expectedBlocks: ['listening-el', 'listening-cielo', 'listening-es', 'listening-azul'],
+        blocks: ['El', 'cielo', 'es', 'azul', 'verde', 'rojo']
+      },
+      {
+        type: 'translation',
+        source: "The grass is green",
+        expected: ["el césped es verde", "la hierba es verde", "césped es verde"]
+      }
+    ];
+  }
+
+  if (lessonId === 'tech') {
+    return [
+      {
+        type: 'drag-drop',
+        source: "I use the computer",
+        expected: ['block-yo', 'block-uso', 'block-la-computadora'],
+        blocks: ['yo', 'uso', 'la computadora', 'ratón', 'teclado', 'pantalla']
+      },
+      {
+        type: 'pair-matching',
+        pairs: [
+          { text: 'Computadora', pair: 1 }, { text: 'Computer', pair: 1 },
+          { text: 'Ratón', pair: 2 }, { text: 'Mouse', pair: 2 },
+          { text: 'Teclado', pair: 3 }, { text: 'Keyboard', pair: 3 },
+          { text: 'Pantalla', pair: 4 }, { text: 'Screen', pair: 4 }
+        ]
+      },
+      {
+        type: 'mic-check',
+        speech: "La pantalla es brillante"
+      },
+      {
+        type: 'listening',
+        audioPhrase: "El teclado tiene teclas",
+        expectedText: "el teclado tiene teclas",
+        expectedBlocks: ['listening-el', 'listening-teclado', 'listening-tiene', 'listening-teclas'],
+        blocks: ['El', 'teclado', 'tiene', 'teclas', 'ratón', 'pantalla']
+      },
+      {
+        type: 'translation',
+        source: "The computer mouse",
+        expected: ["el ratón de la computadora", "ratón de computadora", "el ratón de computadora"]
       }
     ];
   }
@@ -1912,17 +2116,21 @@ function commitLessonProgress() {
 // 8. Cheat / Hint mechanisms
 // ==========================================================================
 function unlockAllSkills() {
-  db.lessons['basics-1'].completed = true;
-  db.lessons['basics-1'].current_step = 5;
-  db.lessons['phrases'].completed = true;
-  db.lessons['phrases'].current_step = 5;
-  db.lessons['food'].locked = false;
-  db.lessons['animals'].locked = false;
-  db.lessons['hobby'].locked = false;
+  const list = ['basics-1', 'phrases', 'food', 'travel', 'animals', 'clothing', 'sports', 'colors', 'tech', 'hobby'];
+  list.forEach(node => {
+    db.lessons[node].completed = true;
+    db.lessons[node].locked = false;
+    db.lessons[node].current_step = 5;
+  });
   
   db.users.learned_words = [
     "el niño", "come", "una manzana", "leche", "bebe", 
-    "hola", "cómo estás", "gracias", "adiós"
+    "hola", "cómo estás", "gracias", "adiós",
+    "avión", "tren", "maleta", "viaje",
+    "camisa", "zapatos", "pantalones", "sombrero",
+    "fútbol", "tenis", "correr", "juego",
+    "rojo", "azul", "verde", "amarillo",
+    "computadora", "ratón", "teclado", "pantalla"
   ];
   
   updateDashboardUI();

@@ -140,16 +140,16 @@
 
                     <!-- Rigid Grid Branching Skill Tree -->
                     <div class="skill-tree-grid">
-                      <!-- Row 1 -->
-                      <div class="tree-node active" onclick="startLesson('basics-1')">
+                      <!-- Row 1 (Beginner Level) -->
+                      <div class="tree-node active" onclick="startLesson('basics-1')" style="grid-row: 1; grid-column: 2;">
                         <div class="node-sphere node-basics">
                           <span class="node-icon">🍎</span>
                         </div>
                         <span class="node-title">Basics 1</span>
-                        <span class="node-status" id="status-basics-1">3/5 Exercises</span>
+                        <span class="node-status" id="status-basics-1">0/5 Exercises</span>
                       </div>
 
-                      <div class="tree-node active" onclick="startLesson('phrases')">
+                      <div class="tree-node active" onclick="startLesson('phrases')" style="grid-row: 1; grid-column: 3;">
                         <div class="node-sphere node-phrases">
                           <span class="node-icon">💬</span>
                         </div>
@@ -157,14 +157,8 @@
                         <span class="node-status" id="status-phrases">0/5 Exercises</span>
                       </div>
 
-                      <!-- Connector Lines (Visual Table Grid) -->
-                      <div class="tree-connector-row">
-                        <div class="connector-line vertical"></div>
-                        <div class="connector-line vertical"></div>
-                      </div>
-
-                      <!-- Row 2 (Locked until Row 1 complete) -->
-                      <div class="tree-node locked" id="node-food" onclick="checkNodeLock('food')">
+                      <!-- Row 2 (Intermediate Level) -->
+                      <div class="tree-node locked" id="node-food" onclick="checkNodeLock('food')" style="grid-row: 2; grid-column: 1;">
                         <div class="node-sphere node-food">
                           <span class="node-icon">🔒</span>
                         </div>
@@ -172,7 +166,15 @@
                         <span class="node-status" id="status-food">Locked</span>
                       </div>
 
-                      <div class="tree-node locked" id="node-animals" onclick="checkNodeLock('animals')">
+                      <div class="tree-node locked" id="node-travel" onclick="checkNodeLock('travel')" style="grid-row: 2; grid-column: 2 / span 2; justify-self: center;">
+                        <div class="node-sphere node-travel" style="background: radial-gradient(circle at 50% 30%, #ffd8a8, #fd7e14); border: 2px solid #e8590c;">
+                          <span class="node-icon">🔒</span>
+                        </div>
+                        <span class="node-title">Travel</span>
+                        <span class="node-status" id="status-travel">Locked</span>
+                      </div>
+
+                      <div class="tree-node locked" id="node-animals" onclick="checkNodeLock('animals')" style="grid-row: 2; grid-column: 4;">
                         <div class="node-sphere node-animals">
                           <span class="node-icon">🔒</span>
                         </div>
@@ -180,13 +182,41 @@
                         <span class="node-status" id="status-animals">Locked</span>
                       </div>
 
-                      <!-- Connector Lines -->
-                      <div class="tree-connector-row" id="tree-connector-hobbies-row" style="grid-column: span 2; display: none;">
-                        <div class="connector-line vertical" style="margin: 0 auto;"></div>
+                      <!-- Row 3 (Advanced Level) -->
+                      <div class="tree-node locked" id="node-clothing" onclick="checkNodeLock('clothing')" style="grid-row: 3; grid-column: 1;">
+                        <div class="node-sphere node-clothing" style="background: radial-gradient(circle at 50% 30%, #f3d9fa, #cc5de8); border: 2px solid #ae3ec9;">
+                          <span class="node-icon">🔒</span>
+                        </div>
+                        <span class="node-title">Clothing</span>
+                        <span class="node-status" id="status-clothing">Locked</span>
                       </div>
 
-                      <!-- Row 3: Custom Hobby Node -->
-                      <div class="tree-node locked" id="node-hobby" onclick="checkHobbyNodeClick()" style="grid-column: span 2; display: none; margin: 0 auto;">
+                      <div class="tree-node locked" id="node-sports" onclick="checkNodeLock('sports')" style="grid-row: 3; grid-column: 2;">
+                        <div class="node-sphere node-sports" style="background: radial-gradient(circle at 50% 30%, #d0ebff, #228be6); border: 2px solid #1c7ed6;">
+                          <span class="node-icon">🔒</span>
+                        </div>
+                        <span class="node-title">Sports</span>
+                        <span class="node-status" id="status-sports">Locked</span>
+                      </div>
+
+                      <div class="tree-node locked" id="node-colors" onclick="checkNodeLock('colors')" style="grid-row: 3; grid-column: 3;">
+                        <div class="node-sphere node-colors" style="background: radial-gradient(circle at 50% 30%, #ffc9c9, #fa5252); border: 2px solid #e03131;">
+                          <span class="node-icon">🔒</span>
+                        </div>
+                        <span class="node-title">Colors</span>
+                        <span class="node-status" id="status-colors">Locked</span>
+                      </div>
+
+                      <div class="tree-node locked" id="node-tech" onclick="checkNodeLock('tech')" style="grid-row: 3; grid-column: 4;">
+                        <div class="node-sphere node-tech" style="background: radial-gradient(circle at 50% 30%, #d8f5a2, #5c940d); border: 2px solid #3b5bdb;">
+                          <span class="node-icon">🔒</span>
+                        </div>
+                        <span class="node-title">Tech</span>
+                        <span class="node-status" id="status-tech">Locked</span>
+                      </div>
+
+                      <!-- Row 4 (Expert Level) -->
+                      <div class="tree-node locked" id="node-hobby" onclick="checkHobbyNodeClick()" style="grid-row: 4; grid-column: 2 / span 2; justify-self: center; display: none;">
                         <div class="node-sphere node-hobby" style="background: radial-gradient(circle at 50% 30%, #ff85a2, #c71585); border: 2px solid #8b008b;">
                           <span class="node-icon" id="node-hobby-icon">🔒</span>
                         </div>

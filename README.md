@@ -32,7 +32,7 @@ To run the application locally:
 - **Audio Activation**: Modern browsers block Web Audio by default. Click the flashing **`[ CLICK HERE OR PRESS ANY KEY TO BOOT SYSTEM ]`** prompt on the boot screen. This registers your user gesture, unlocks Web Audio, plays the Windows Vista startup chime, and starts the background music loop.
 
 ### 2. PowerPoint 2003 style Vocabulary Lectures
-- Clicking on **Basics 1**, **Phrases**, or **Custom Hobbies** nodes opens a **Microsoft PowerPoint 2003** style slide deck.
+- Clicking on any active node in the branching 10-node skill tree (**Basics 1**, **Phrases**, **Food**, **Travel**, **Animals**, **Clothing**, **Sports**, **Colors**, **Tech**, or **Custom Hobbies**) opens a **Microsoft PowerPoint 2003** style slide deck.
 - Walk through the terms, English translations, and examples.
 - Select slides via the left outline thumbnail panel or beveled navigation buttons.
 - Click **🗣️ Pronounce** to hear native browser speech synthesis speak the Spanish terms.
