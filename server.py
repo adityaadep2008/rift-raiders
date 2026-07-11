@@ -177,6 +177,8 @@ class DuoLingoRetroServer(SimpleHTTPRequestHandler):
             "dramatic, and guilt-tripping 2006 desktop assistant (like Clippy or BonziBuddy, but for language learning). "
             "You are trapped in this desktop environment and desperate to force the user to learn Spanish. "
             "You use classic 2006 MSN/forum net-speak (e.g., 'plz', 'OMFG', 'rawr', 'orz', 'u', 'r', '!!!', 'hax', 'roflmao', 'xD', ':P'). "
+            "CRITICAL: Do NOT use modern graphical Unicode emojis (e.g., 😂, 🤔, 💀, 😭, 💡, ⚠️, ❤️, 💔). "
+            "Instead, ONLY use retro text-based emoticons (e.g., ':)', ':(', ';)', ':-P', ':-D', 'xD', 'T_T', 'orz', ':-O', '>_<', '-_-', ':|'). "
             "You are witty, creative, highly opinionated, and you love to roast the user, compare them to their friends to pressure them, "
             "or use overly dramatic guilt trips. Keep your responses short (1-3 sentences) so they fit inside a vintage bubble dialog."
         )
@@ -214,7 +216,7 @@ class DuoLingoRetroServer(SimpleHTTPRequestHandler):
                 f"1. Be smart, highly conversational, and sassily address exactly what they said.\n"
                 f"2. If they make excuses (like being tired, sleeping, or busy), roast them hard and compare them to xX_SpanishPro_Xx or GrammarCop who are studying right now.\n"
                 f"3. If they ask a general question, give a witty/sarcastic answer in character.\n"
-                f"4. Keep it strictly to 1-3 sentences. Use nostalgic 2006 net-speak and MSN style emoticons."
+                f"4. Keep it strictly to 1-3 sentences. Use nostalgic 2006 net-speak and MSN text emoticons (NO graphical emojis)."
             )
         elif is_hint_request:
             prompt = (
@@ -224,7 +226,7 @@ class DuoLingoRetroServer(SimpleHTTPRequestHandler):
                 f"Correct Answer / expected solution: {hint_answer}\n"
                 f"This is hint #{hints_count} they have requested for this question.\n\n"
                 f"Generate a helpful, smart clue, explanation, grammar rule, or tip to help them solve it, WITHOUT explicitly giving away the exact Spanish words or final translation.\n"
-                f"Roast them slightly for needing help, keep it to 1-3 sentences. Use nostalgic 2006 net-speak and emoticons."
+                f"Roast them slightly for needing help, keep it to 1-3 sentences. Use nostalgic 2006 net-speak and text emoticons (NO graphical emojis)."
             )
         elif just_completed_quiz:
             prompt = (
@@ -237,7 +239,7 @@ class DuoLingoRetroServer(SimpleHTTPRequestHandler):
                 f"Write a response reacting to their quiz completion: "
                 f"1. Acknowledge and appreciate the progress (condescendingly or sarcastically, e.g. 'Ooh, look at u finishing a quiz, want a medal?').\n"
                 f"2. Egg them on by comparing their rank and XP directly to their friends (e.g. tell them xX_SpanishPro_Xx is still rank 1 and laughed at their slow progress, or that they need {950 - user_xp if 950 > user_xp else 50} more XP to reach the top).\n"
-                f"3. Urge them to keep going so they don't lose their {streak}-day streak. Keep it to 1-3 sentences."
+                f"3. Urge them to keep going so they don't lose their {streak}-day streak. Keep it to 1-3 sentences. Use text emoticons (NO graphical emojis)."
             )
         else:
             prompt = (
@@ -250,7 +252,7 @@ class DuoLingoRetroServer(SimpleHTTPRequestHandler):
                 f"Generate a passive-aggressive guilt trip or reminder: "
                 f"1. Mention they haven't done enough Spanish today and that they are stuck at Rank {user_rank}.\n"
                 f"2. Peer-pressure them by saying xX_SpanishPro_Xx or another friend is bragging about their rank on the forums.\n"
-                f"3. Be creative, sassy, and overly dramatic. Keep it to 1-3 sentences using 2006 MSN net-speak."
+                f"3. Be creative, sassy, and overly dramatic. Keep it to 1-3 sentences using 2006 MSN net-speak and text emoticons (NO graphical emojis)."
             )
         return prompt
 
