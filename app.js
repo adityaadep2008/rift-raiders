@@ -198,6 +198,123 @@ class RetroAudioEngine {
     osc2.stop(now + 0.45);
   }
 
+  // Rapid drumroll sequence followed by correct chime
+  playDrumrollCorrect() {
+    this.init();
+    if (!this.ctx || this.ctx.state === 'suspended') return;
+    
+    const now = this.ctx.currentTime;
+    
+    const playSnareHit = (time, volume) => {
+      const bufferSize = Math.floor(this.ctx.sampleRate * 0.08);
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      
+      const noiseFilter = this.ctx.createBiquadFilter();
+      noiseFilter.type = 'bandpass';
+      noiseFilter.frequency.value = 1000;
+      noiseFilter.Q.value = 3;
+      
+      const noiseGain = this.ctx.createGain();
+      noiseGain.gain.setValueAtTime(volume * 0.15, time);
+      noiseGain.gain.linearRampToValueAtTime(0, time + 0.07);
+      
+      const osc = this.ctx.createOscillator();
+      const oscGain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(180, time);
+      osc.frequency.linearRampToValueAtTime(100, time + 0.04);
+      
+      oscGain.gain.setValueAtTime(volume * 0.18, time);
+      oscGain.gain.linearRampToValueAtTime(0, time + 0.05);
+      
+      noise.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(this.ctx.destination);
+      
+      osc.connect(oscGain);
+      oscGain.connect(this.ctx.destination);
+      
+      noise.start(time);
+      noise.stop(time + 0.08);
+      osc.start(time);
+      osc.stop(time + 0.08);
+    };
+
+    const hitsCount = 10;
+    const interval = 0.08;
+    for (let i = 0; i < hitsCount; i++) {
+      const vol = 0.4 + (i / hitsCount) * 0.6;
+      playSnareHit(now + i * interval, vol);
+    }
+    
+    const endOfRollTime = now + hitsCount * interval;
+    
+    const kickOsc = this.ctx.createOscillator();
+    const kickGain = this.ctx.createGain();
+    kickOsc.frequency.setValueAtTime(150, endOfRollTime);
+    kickOsc.frequency.linearRampToValueAtTime(40, endOfRollTime + 0.3);
+    
+    kickGain.gain.setValueAtTime(0.25, endOfRollTime);
+    kickGain.gain.linearRampToValueAtTime(0, endOfRollTime + 0.3);
+    
+    kickOsc.connect(kickGain);
+    kickGain.connect(this.ctx.destination);
+    kickOsc.start(endOfRollTime);
+    kickOsc.stop(endOfRollTime + 0.3);
+    
+    const cymBuffer = this.ctx.createBuffer(1, Math.floor(this.ctx.sampleRate * 0.8), this.ctx.sampleRate);
+    const cymData = cymBuffer.getChannelData(0);
+    for (let i = 0; i < cymBuffer.length; i++) {
+      cymData[i] = Math.random() * 2 - 1;
+    }
+    const cymSource = this.ctx.createBufferSource();
+    cymSource.buffer = cymBuffer;
+    
+    const cymFilter = this.ctx.createBiquadFilter();
+    cymFilter.type = 'highpass';
+    cymFilter.frequency.value = 7000;
+    
+    const cymGain = this.ctx.createGain();
+    cymGain.gain.setValueAtTime(0.08, endOfRollTime);
+    cymGain.gain.linearRampToValueAtTime(0, endOfRollTime + 0.7);
+    
+    cymSource.connect(cymFilter);
+    cymFilter.connect(cymGain);
+    cymGain.connect(this.ctx.destination);
+    
+    cymSource.start(endOfRollTime);
+    cymSource.stop(endOfRollTime + 0.8);
+    
+    const chimeTime = endOfRollTime + 0.05;
+    
+    const oscChime1 = this.ctx.createOscillator();
+    const gainChime1 = this.ctx.createGain();
+    oscChime1.frequency.setValueAtTime(523.25, chimeTime);
+    gainChime1.gain.setValueAtTime(0.18, chimeTime);
+    gainChime1.gain.linearRampToValueAtTime(0, chimeTime + 0.3);
+    oscChime1.connect(gainChime1);
+    gainChime1.connect(this.ctx.destination);
+    oscChime1.start(chimeTime);
+    oscChime1.stop(chimeTime + 0.3);
+    
+    const oscChime2 = this.ctx.createOscillator();
+    const gainChime2 = this.ctx.createGain();
+    oscChime2.frequency.setValueAtTime(659.25, chimeTime + 0.12);
+    gainChime2.gain.setValueAtTime(0.18, chimeTime + 0.12);
+    gainChime2.gain.linearRampToValueAtTime(0, chimeTime + 0.45);
+    oscChime2.connect(gainChime2);
+    gainChime2.connect(this.ctx.destination);
+    oscChime2.start(chimeTime + 0.12);
+    oscChime2.stop(chimeTime + 0.45);
+  }
+
   // Loud digital buzzer error sound
   playError() {
     this.init();
@@ -2076,7 +2193,7 @@ function checkExerciseAnswer() {
     
     msgEl.innerText = 'EXCELLENT! Correct answer.';
     msgEl.className = 'exercise-message correct';
-    audio.playCorrect();
+    audio.playDrumrollCorrect();
     
     lessonSessionState.answers_correct++;
     lessonSessionState.xp_gain += 10;
