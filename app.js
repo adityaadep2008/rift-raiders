@@ -15,11 +15,15 @@ class RetroAudioEngine {
     if (!this.ctx) {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
     }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
   }
 
   // Windows Vista/XP inspired Startup Chime
   playStartup() {
     this.init();
+    if (!this.ctx) return;
     const now = this.ctx.currentTime;
     
     // Vista Startup Chord: Eb major add9 / Ab major vibe
@@ -46,6 +50,7 @@ class RetroAudioEngine {
   // Simulated mechanical hard drive click
   playHddClick() {
     this.init();
+    if (!this.ctx) return;
     const now = this.ctx.currentTime;
     
     const bufferSize = this.ctx.sampleRate * 0.02; // 20ms
@@ -79,6 +84,7 @@ class RetroAudioEngine {
   // Double chime on correct response
   playCorrect() {
     this.init();
+    if (!this.ctx) return;
     const now = this.ctx.currentTime;
     
     // Note 1
@@ -107,6 +113,7 @@ class RetroAudioEngine {
   // Loud digital buzzer error sound
   playError() {
     this.init();
+    if (!this.ctx) return;
     const now = this.ctx.currentTime;
     
     const osc = this.ctx.createOscillator();
@@ -128,6 +135,7 @@ class RetroAudioEngine {
   // MSN Messenger toaster alert sound ("da-ding!")
   playBBSChime() {
     this.init();
+    if (!this.ctx) return;
     const now = this.ctx.currentTime;
     
     const osc1 = this.ctx.createOscillator();
@@ -146,72 +154,76 @@ class RetroAudioEngine {
     osc2.type = 'sine';
     osc2.frequency.setValueAtTime(1320, now + 0.08); // E6
     gain2.gain.setValueAtTime(0.15, now + 0.08);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
     osc2.connect(gain2);
     gain2.connect(this.ctx.destination);
     osc2.start(now + 0.08);
-    osc2.stop(now + 0.4);
+    osc2.stop(now + 0.45);
   }
 
-  // Low quality robotic speech synthesis modulating word length and characters
-  playRoboticSpeech(phrase) {
+  // satisfying pop sound when blocks are dropped
+  playDropSound() {
     this.init();
+    if (!this.ctx) return;
     const now = this.ctx.currentTime;
     
-    const words = phrase.toLowerCase().replace(/[?,!¿]/g, '').split(' ');
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
     
-    words.forEach((word, wordIndex) => {
-      const osc = this.ctx.createOscillator();
-      const mod = this.ctx.createOscillator();
-      const modGain = this.ctx.createGain();
-      const filter = this.ctx.createBiquadFilter();
-      const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(580, now);
+    osc.frequency.exponentialRampToValueAtTime(160, now + 0.09); // drop pitch
+    
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+    
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.09);
+  }
+
+  // Sequential, robust speech synthesis using native Web Speech API (Spanish voices)
+  playRoboticSpeech(phrase) {
+    if ('speechSynthesis' in window) {
+      // Cancel any active speech utterance
+      window.speechSynthesis.cancel();
       
-      const delay = wordIndex * 0.42;
-      const duration = 0.32;
+      const utterance = new SpeechSynthesisUtterance(phrase);
       
-      osc.type = 'sawtooth';
+      // Select Spanish language
+      utterance.lang = 'es-ES';
       
-      const baseFreq = 160 + (word.length * 12) + (Math.sin(wordIndex * 2) * 25);
-      osc.frequency.setValueAtTime(baseFreq, now + delay);
+      // Clunky retro computer assistant tuning
+      utterance.pitch = 0.85; // lower pitch
+      utterance.rate = 0.8;  // slower rate
       
-      mod.frequency.setValueAtTime(50, now + delay);
-      modGain.gain.setValueAtTime(18, now + delay);
-      
-      filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(850, now + delay);
-      filter.Q.setValueAtTime(2.5, now + delay);
-      
-      gain.gain.setValueAtTime(0, now + delay);
-      gain.gain.linearRampToValueAtTime(0.14, now + delay + 0.04);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + duration);
-      
-      mod.connect(modGain);
-      modGain.connect(osc.frequency);
-      osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(this.ctx.destination);
-      
-      mod.start(now + delay);
-      osc.start(now + delay);
-      
-      mod.stop(now + delay + duration);
-      osc.stop(now + delay + duration);
-    });
+      window.speechSynthesis.speak(utterance);
+      logToConsole(`[PHP] Native SpeechSynthesis: Speaking "${phrase}" in Spanish.`);
+    } else {
+      logToConsole(`[PHP WARNING] SpeechSynthesis API not supported. Falling back to synthetic chimes.`, 'warning');
+      this.playCorrect();
+    }
   }
 }
 
 const audio = new RetroAudioEngine();
 
-// Resume AudioContext on first body click
+// Capture console and runtime errors directly in our visible SQL/PHP activity console drawer
+window.addEventListener('error', (e) => {
+  logToConsole(`[JS EXCEPTION] ${e.message} at line ${e.lineno}`, 'error');
+});
+window.addEventListener('unhandledrejection', (e) => {
+  logToConsole(`[JS REJECTION] ${e.reason}`, 'error');
+});
+
+// Resume context and register key down for booting
 window.addEventListener('click', () => {
   audio.init();
-  if (audio.ctx && audio.ctx.state === 'suspended') {
-    audio.ctx.resume().then(() => {
-      logToConsole(`[PHP] AudioContext successfully resumed via user click interaction.`);
-    });
-  }
 });
+window.addEventListener('keydown', () => {
+  audio.init();
+});;
 
 
 // ==========================================================================
@@ -389,8 +401,29 @@ function resetDatabaseState() {
 // ==========================================================================
 // 3. UI Application Logic (Desktop window drag, minimize, maximize)
 // ==========================================================================
-window.addEventListener('DOMContentLoaded', () => {
-  // Boot sequence simulation
+let isBooted = false;
+function startSystemBoot() {
+  if (isBooted) return;
+  isBooted = true;
+  
+  audio.init();
+  if (audio.ctx && audio.ctx.state === 'suspended') {
+    audio.ctx.resume();
+  }
+  audio.playHddClick();
+  
+  const statusEl = document.getElementById('boot-status');
+  if (statusEl) {
+    statusEl.innerText = "Starting Windows Vista...";
+    statusEl.style.color = "#fff";
+    statusEl.style.animation = "none";
+  }
+  
+  const loaderEl = document.getElementById('boot-loader');
+  if (loaderEl) {
+    loaderEl.classList.remove('hidden');
+  }
+  
   setTimeout(() => {
     audio.playStartup();
     
@@ -404,6 +437,15 @@ window.addEventListener('DOMContentLoaded', () => {
     openHobbyWizard();
     startBuddyMessengerSimulation();
   }, 3500);
+}
+
+// Allow boot via keydown
+window.addEventListener('keydown', () => {
+  startSystemBoot();
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  // Loaded, wait for boot gesture click or keypress
 });
 
 function initSystemTrayTime() {
@@ -1308,13 +1350,13 @@ function initDragDropExercise() {
           slot.innerHTML = '';
           slot.removeAttribute('data-block-id');
           block.classList.remove('dragged-out');
-          audio.playHddClick();
+          audio.playDropSound();
         };
         
         slot.appendChild(clone);
         slot.setAttribute('data-block-id', blockId);
         block.classList.add('dragged-out');
-        audio.playHddClick();
+        audio.playDropSound();
       }
     });
   });
@@ -1570,12 +1612,12 @@ function initListeningExercise() {
           slot.innerHTML = '';
           slot.removeAttribute('data-block-id');
           block.classList.remove('dragged-out');
-          audio.playHddClick();
+          audio.playDropSound();
         };
         slot.appendChild(clone);
         slot.setAttribute('data-block-id', blockId);
         block.classList.add('dragged-out');
-        audio.playHddClick();
+        audio.playDropSound();
       }
     });
   });

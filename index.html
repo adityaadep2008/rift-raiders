@@ -18,7 +18,7 @@
       <div class="crt-screen">
         
         <!-- Boot Screen -->
-        <div id="boot-screen" class="boot-screen">
+        <div id="boot-screen" class="boot-screen" onclick="startSystemBoot()" style="cursor: pointer;">
           <div class="bios-info">
             <p>AWARD BIOS V4.51PG, An Energy Star Ally</p>
             <p>Copyright (C) 1984-2006, Award Software, Inc.</p>
@@ -29,9 +29,9 @@
             <p>Detecting Primary Slave  ... NONE</p>
             <p>Loud HDD Clicking ... [SUCCESS]</p>
             <br>
-            <p>Starting Windows Vista...</p>
+            <p id="boot-status" style="color: #39ff14; animation: combo-blink 0.8s infinite alternate;">[ CLICK HERE OR PRESS ANY KEY TO BOOT SYSTEM ]</p>
           </div>
-          <div class="vista-loader">
+          <div class="vista-loader hidden" id="boot-loader">
             <div class="vista-loader-bar">
               <div class="vista-loader-chunk"></div>
             </div>
