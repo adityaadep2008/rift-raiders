@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DuoLingo 2006 Edition - Retro Reboot</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Retro fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- CRT Monitor Frame Wrapper -->
+  <div class="crt-monitor">
+    <div class="crt-bezel">
+      <!-- CRT Screen with flicker and scanlines -->
+      <div class="crt-screen">
+        
+        <!-- Boot Screen -->
+        <div id="boot-screen" class="boot-screen">
+          <div class="bios-info">
+            <p>AWARD BIOS V4.51PG, An Energy Star Ally</p>
+            <p>Copyright (C) 1984-2006, Award Software, Inc.</p>
+            <p>DUO OWL-3D PROCESSOR v2006.11</p>
+            <p>Memory Test : 512MB OK</p>
+            <br>
+            <p>Detecting Primary Master ... LINGO-HDD-40GB</p>
+            <p>Detecting Primary Slave  ... NONE</p>
+            <p>Loud HDD Clicking ... [SUCCESS]</p>
+            <br>
+            <p>Starting Windows Vista...</p>
+          </div>
+          <div class="vista-loader">
+            <div class="vista-loader-bar">
+              <div class="vista-loader-chunk"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desktop Shell -->
+        <div id="desktop" class="desktop-shell hidden">
+          <!-- Desktop Icons -->
+          <div class="desktop-icons">
+            <div class="desktop-icon" id="icon-duolingo" onclick="openDuoApp()">
+              <img src="logo.jpg" alt="DuoLingo Logo" class="pixel-icon-large">
+              <span>DuoLingo 2006</span>
+            </div>
+            <div class="desktop-icon" id="icon-bbs" onclick="switchTab('tab-bbs')">
+              <div class="bbs-icon-glyph">BBS</div>
+              <span>BBS Forums</span>
+            </div>
+            <div class="desktop-icon" id="icon-shop" onclick="switchTab('tab-shop')">
+              <div class="shop-icon-glyph">🪙</div>
+              <span>Lingot Shop</span>
+            </div>
+          </div>
+
+          <!-- Main Application Window (Vista Aero Style) -->
+          <div id="duo-window" class="aero-window window-active">
+            <!-- Window Titlebar -->
+            <div class="window-titlebar" id="window-titlebar">
+              <div class="titlebar-left">
+                <img src="logo.jpg" alt="Duo Owl" class="titlebar-icon">
+                <span class="titlebar-text">DuoLingo 2006 Edition [v1.0.4-BETA]</span>
+              </div>
+              <div class="titlebar-controls">
+                <button class="titlebar-btn btn-min" onclick="minimizeWindow()"></button>
+                <button class="titlebar-btn btn-max" onclick="toggleMaximizeWindow()"></button>
+                <button class="titlebar-btn btn-close" onclick="closeWindow()"></button>
+              </div>
+            </div>
+
+            <!-- Menu Bar -->
+            <div class="window-menubar">
+              <span class="menu-item">File</span>
+              <span class="menu-item" onclick="unlockAllSkills()" style="color: #ff5555; font-weight: bold;">Unlock All Skills</span>
+              <span class="menu-item" onclick="openHobbyWizard()">Change Hobby</span>
+              <span class="menu-item" onclick="toggleServerLogs()">Server Logs (F12)</span>
+              <span class="menu-item" onclick="resetDatabaseState()">Reset DB</span>
+              <div class="menu-divider"></div>
+              <div class="db-cache-toggle">
+                <label>
+                  <input type="checkbox" id="db-cache-checkbox" onchange="toggleDbCache(this.checked)">
+                  Enable Aggressive MySQL Cache
+                </label>
+              </div>
+            </div>
+
+            <!-- Window Client Area -->
+            <div class="window-client">
+              
+              <!-- Left Sidebar: Skill Tree & Main Content Navigator -->
+              <div class="main-content-area">
+                <!-- Navigation Tabs Header -->
+                <div class="tabs-header">
+                  <button class="tab-btn active" id="tab-btn-tree" onclick="switchTab('tab-tree')">Learning Tree</button>
+                  <button class="tab-btn" id="tab-btn-bbs" onclick="switchTab('tab-bbs')">BBS Forum Leaderboards</button>
+                  <button class="tab-btn" id="tab-btn-shop" onclick="switchTab('tab-shop')">Lingot Store</button>
+                </div>
+
+                <!-- Tab Panel: Skill Tree -->
+                <div class="tab-panel active" id="tab-tree">
+                  <div class="skill-tree-container">
+                    <div class="skill-tree-header">
+                      <h3>🌐 Language Course: Retro Spanish (Classic)</h3>
+                      <div class="streak-widget-header">
+                        <span class="fire-icon">🔥</span> Streak: <span id="streak-counter-val">3</span> Days
+                        <span class="streak-freeze-badge" id="freeze-badge" style="display: none;">❄️ Freeze Active</span>
+                      </div>
+                    </div>
+
+                    <!-- Rigid Grid Branching Skill Tree -->
+                    <div class="skill-tree-grid">
+                      <!-- Row 1 -->
+                      <div class="tree-node active" onclick="startLesson('basics-1')">
+                        <div class="node-sphere node-basics">
+                          <span class="node-icon">🍎</span>
+                        </div>
+                        <span class="node-title">Basics 1</span>
+                        <span class="node-status" id="status-basics-1">3/5 Exercises</span>
+                      </div>
+
+                      <div class="tree-node active" onclick="startLesson('phrases')">
+                        <div class="node-sphere node-phrases">
+                          <span class="node-icon">💬</span>
+                        </div>
+                        <span class="node-title">Phrases</span>
+                        <span class="node-status" id="status-phrases">0/5 Exercises</span>
+                      </div>
+
+                      <!-- Connector Lines (Visual Table Grid) -->
+                      <div class="tree-connector-row">
+                        <div class="connector-line vertical"></div>
+                        <div class="connector-line vertical"></div>
+                      </div>
+
+                      <!-- Row 2 (Locked until Row 1 complete) -->
+                      <div class="tree-node locked" id="node-food" onclick="checkNodeLock('food')">
+                        <div class="node-sphere node-food">
+                          <span class="node-icon">🔒</span>
+                        </div>
+                        <span class="node-title">Food</span>
+                        <span class="node-status" id="status-food">Locked</span>
+                      </div>
+
+                      <div class="tree-node locked" id="node-animals" onclick="checkNodeLock('animals')">
+                        <div class="node-sphere node-animals">
+                          <span class="node-icon">🔒</span>
+                        </div>
+                        <span class="node-title">Animals</span>
+                        <span class="node-status" id="status-animals">Locked</span>
+                      </div>
+
+                      <!-- Connector Lines -->
+                      <div class="tree-connector-row" id="tree-connector-hobbies-row" style="grid-column: span 2; display: none;">
+                        <div class="connector-line vertical" style="margin: 0 auto;"></div>
+                      </div>
+
+                      <!-- Row 3: Custom Hobby Node -->
+                      <div class="tree-node locked" id="node-hobby" onclick="checkHobbyNodeClick()" style="grid-column: span 2; display: none; margin: 0 auto;">
+                        <div class="node-sphere node-hobby" style="background: radial-gradient(circle at 50% 30%, #ff85a2, #c71585); border: 2px solid #8b008b;">
+                          <span class="node-icon" id="node-hobby-icon">🔒</span>
+                        </div>
+                        <span class="node-title" id="node-hobby-title">Hobby Lecture</span>
+                        <span class="node-status" id="status-hobby">Locked</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tab Panel: BBS BBS BBS -->
+                <div class="tab-panel" id="tab-bbs">
+                  <div class="bbs-container">
+                    <div class="bbs-banner">
+                      <h2>=-= THE DUOLINGO BBS RETRO BOARDS =-=</h2>
+                      <p>Welcome back! You are logged in as <strong>Learner_2006</strong> (Registered: Jun 2006)</p>
+                    </div>
+
+                    <table class="bbs-table">
+                      <thead>
+                        <tr>
+                          <th>Rank</th>
+                          <th>User / Poster</th>
+                          <th>Post Count</th>
+                          <th>Daily XP</th>
+                          <th>Current Tier</th>
+                        </tr>
+                      </thead>
+                      <tbody id="leaderboard-body">
+                        <!-- Populated by JS -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Tab Panel: Lingot Store -->
+                <div class="tab-panel" id="tab-shop">
+                  <div class="shop-container">
+                    <div class="shop-header">
+                      <h3>🪙 The Lingot Storefront Catalog</h3>
+                      <div class="balance-display">Your Balance: <span id="shop-lingots-val">15</span> Lingots</div>
+                    </div>
+                    
+                    <div class="shop-items-grid">
+                      <!-- Item 1 -->
+                      <div class="shop-card">
+                        <div class="shop-card-icon">❄️</div>
+                        <h4>Streak Freeze</h4>
+                        <p>Allows your streak to remain in place if you miss a day of practice.</p>
+                        <button class="shop-buy-btn" onclick="buyItem('streak_freeze', 10)">Buy (10 Lingots)</button>
+                      </div>
+
+                      <!-- Item 2 -->
+                      <div class="shop-card">
+                        <div class="shop-card-icon">👔</div>
+                        <h4>Duo Tracksuit Skin</h4>
+                        <p>Dresses Duo the Owl in a generic blue & gold 2000s track suit.</p>
+                        <button class="shop-buy-btn" id="buy-tracksuit-btn" onclick="buyItem('tracksuit', 5)">Buy (5 Lingots)</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Right Sidebar: Buddy List & Duo Assistant -->
+              <div class="right-sidebar">
+                <!-- Mascot Assistant widget (Duo) -->
+                <div class="mascot-widget">
+                  <div class="mascot-avatar-container">
+                    <img src="logo.jpg" alt="Duo Owl mascot" id="mascot-img" class="mascot-img">
+                  </div>
+                  <div class="mascot-speech-bubble" id="mascot-bubble">
+                    <p>Oh, your friend <strong>xX_SpanishPro_Xx</strong> did 7 levels today. What are you waiting for?</p>
+                  </div>
+                </div>
+
+                <!-- MSN-style Buddy List -->
+                <div class="buddy-list-widget">
+                  <div class="buddy-header">
+                    <span>Buddy List (Duolingo Messenger)</span>
+                    <span class="buddy-count">(3/4 Online)</span>
+                  </div>
+                  <div class="buddy-list">
+                    <div class="buddy-item online">
+                      <span class="buddy-status-icon">🟢</span>
+                      <span class="buddy-name">xX_SpanishPro_Xx (Online)</span>
+                    </div>
+                    <div class="buddy-item online">
+                      <span class="buddy-status-icon">🟢</span>
+                      <span class="buddy-name">Vistafan99 (Writing essays...)</span>
+                    </div>
+                    <div class="buddy-item online">
+                      <span class="buddy-status-icon">🟢</span>
+                      <span class="buddy-name">GrammarCop [BBS Admin]</span>
+                    </div>
+                    <div class="buddy-item away">
+                      <span class="buddy-status-icon">🟠</span>
+                      <span class="buddy-name">DuoTheOwl (Away - Guilt-tripping)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Window Status Bar -->
+            <div class="window-statusbar">
+              <span id="statusbar-left">Connection status: Connected to 56k Modem Gateway...</span>
+              <span id="statusbar-right">Windows User: LocalHost (CPU: 98% Loaded)</span>
+            </div>
+          </div>
+
+          <!-- Lesson Modal Overlay (for exercises) -->
+          <div id="lesson-overlay" class="lesson-overlay hidden">
+            <div class="aero-window lesson-window">
+              <!-- Lesson Header -->
+              <div class="window-titlebar">
+                <div class="titlebar-left">
+                  <span>DuoLingo 2006 Module Practice</span>
+                </div>
+                <div class="titlebar-controls">
+                  <button class="titlebar-btn btn-close" onclick="abortLesson()"></button>
+                </div>
+              </div>
+
+              <!-- Lesson Content Wrapper -->
+              <div class="lesson-workspace">
+                <div class="lesson-progress-row">
+                  <div class="hearts-engine">
+                    <!-- 5 hearts -->
+                    <span class="heart-slot" id="heart-1">❤️</span>
+                    <span class="heart-slot" id="heart-2">❤️</span>
+                    <span class="heart-slot" id="heart-3">❤️</span>
+                    <span class="heart-slot" id="heart-4">❤️</span>
+                    <span class="heart-slot" id="heart-5">❤️</span>
+                  </div>
+                  <div class="combo-meter-widget" id="combo-widget">
+                    <span class="combo-title">COMBO METER:</span>
+                    <span class="combo-count" id="combo-count-val">0</span>
+                    <span class="combo-flash-text" id="combo-marquee" style="display: none;">🔥 COMBO x2 🔥</span>
+                  </div>
+                  <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="lesson-progress-bar" style="width: 20%;"></div>
+                  </div>
+                </div>
+
+                <!-- Dynamic Exercise Zone -->
+                <div class="exercise-zone" id="exercise-zone">
+                  <!-- Exercise 1: Drag & Drop (HTML Table Slots) -->
+                  <div class="exercise-panel" id="ex-drag-drop">
+                    <h4>Exercise 1: Mechanical Drag and Drop</h4>
+                    <p class="instruction-text">Translate this sentence by dragging word blocks into the destination grid cells:</p>
+                    <p class="source-sentence">"The boy eats an apple"</p>
+                    
+                    <!-- Table Grid Destination -->
+                    <div class="table-drop-zone" id="table-drop-zone">
+                      <div class="table-slot" data-slot="0"></div>
+                      <div class="table-slot" data-slot="1"></div>
+                      <div class="table-slot" data-slot="2"></div>
+                      <div class="table-slot" data-slot="3"></div>
+                      <div class="table-slot" data-slot="4"></div>
+                    </div>
+
+                    <!-- Source word blocks -->
+                    <div class="word-blocks-pool" id="word-blocks-pool">
+                      <div class="word-block" draggable="true" id="block-el">El</div>
+                      <div class="word-block" draggable="true" id="block-come">come</div>
+                      <div class="word-block" draggable="true" id="block-manzana">manzana</div>
+                      <div class="word-block" draggable="true" id="block-perro">perro</div>
+                      <div class="word-block" draggable="true" id="block-nino">niño</div>
+                      <div class="word-block" draggable="true" id="block-una">una</div>
+                      <div class="word-block" draggable="true" id="block-leche">leche</div>
+                    </div>
+                  </div>
+
+                  <!-- Exercise 2: Pair Matching Grid -->
+                  <div class="exercise-panel hidden" id="ex-pair-matching">
+                    <h4>Exercise 2: Skeuomorphic Pair Matching</h4>
+                    <p class="instruction-text">Match the corresponding Spanish & English word pairs:</p>
+                    
+                    <div class="pair-match-grid" id="pair-match-grid">
+                      <!-- Cards generated dynamically by JS -->
+                    </div>
+                  </div>
+
+                  <!-- Exercise 3: Simulated Flash Mic Access -->
+                  <div class="exercise-panel hidden" id="ex-mic-check">
+                    <h4>Exercise 3: Microphone Speech Check</h4>
+                    <p class="instruction-text">Read the sentence aloud to test your speech calibration:</p>
+                    <p class="speech-target">"Hola, ¿cómo estás?"</p>
+
+                    <div class="flash-mic-wrapper">
+                      <!-- Macromedia Flash 8 Permission Dialog -->
+                      <div class="flash-dialog" id="flash-dialog">
+                        <div class="flash-dialog-header">
+                          <span>Macromedia Flash Player Settings</span>
+                        </div>
+                        <div class="flash-dialog-content">
+                          <p><strong>Privacy</strong></p>
+                          <p>local.duolingo2006.com is requesting permission to access your camera and microphone.</p>
+                          <p>If you click Allow, you may be recorded.</p>
+                          <div class="flash-dialog-buttons">
+                            <button class="flash-btn" onclick="allowFlashMic()">Allow</button>
+                            <button class="flash-btn" onclick="denyFlashMic()">Deny</button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Voice Recorder Interface (Locked behind Flash Allow) -->
+                      <div class="voice-recorder-widget locked-mic" id="voice-recorder-widget">
+                        <div class="recorder-display" id="recorder-display">Flash Mic Access: BLOCKED</div>
+                        <div class="recorder-controls">
+                          <button class="recorder-btn record" id="btn-record-mic" disabled onclick="toggleRecordMic()">🎙️ Record</button>
+                        </div>
+                        <!-- Upload progress bar simulating 2006 upload speed -->
+                        <div class="upload-progress-container hidden" id="upload-progress-container">
+                          <div class="upload-progress-label" id="upload-progress-label">Uploading wav to php-bin/...</div>
+                          <div class="upload-progress-bar">
+                            <div class="upload-progress-fill" id="upload-progress-fill" style="width: 0%;"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Exercise 4: Winamp listening translation -->
+                  <div class="exercise-panel hidden" id="ex-listening">
+                    <h4>Exercise 4: Winamp 5 Listening Comprehension</h4>
+                    <p class="instruction-text">Play the audio file and transcribe the exact Spanish phrase you hear:</p>
+
+                    <!-- Winamp style media player widget -->
+                    <div class="winamp-player">
+                      <div class="winamp-title-row">
+                        <span class="winamp-logo">⚡ WINAMP 5.06</span>
+                        <span class="winamp-track-title" id="winamp-track-title">01. DuoLingo Spanish Audio.wav</span>
+                      </div>
+                      <div class="winamp-display">
+                        <div class="winamp-time" id="winamp-time">00:00</div>
+                        <div class="winamp-vis">
+                          <div class="vis-bar" style="height: 10px;"></div>
+                          <div class="vis-bar" style="height: 14px;"></div>
+                          <div class="vis-bar" style="height: 8px;"></div>
+                          <div class="vis-bar" style="height: 18px;"></div>
+                          <div class="vis-bar" style="height: 5px;"></div>
+                          <div class="vis-bar" style="height: 11px;"></div>
+                        </div>
+                      </div>
+                      <div class="winamp-controls">
+                        <button class="winamp-btn" onclick="playWinampAudio()">▶ Play</button>
+                        <button class="winamp-btn" onclick="stopWinampAudio()">■ Stop</button>
+                      </div>
+                    </div>
+
+                    <div class="winamp-input-zone">
+                      <label for="winamp-transcription">Transcription input (Type answer):</label>
+                      <input type="text" id="winamp-transcription" placeholder="Type what you hear here...">
+                      
+                      <div class="or-separator" style="margin: 8px 0; font-size: 11px; color: #777; font-weight: bold; text-align: center; width: 100%;">— OR ASSEMBLE WORD BLOCKS —</div>
+                      
+                      <!-- Listening Table Slots -->
+                      <div class="table-drop-zone" id="listening-drop-zone" style="min-height: 45px; margin-bottom: 8px; padding: 6px; width: 100%; display: grid; grid-template-columns: repeat(4, 1fr);">
+                        <div class="table-slot" data-slot="0"></div>
+                        <div class="table-slot" data-slot="1"></div>
+                        <div class="table-slot" data-slot="2"></div>
+                        <div class="table-slot" data-slot="3"></div>
+                      </div>
+                      
+                      <!-- Listening Word Blocks Pool -->
+                      <div class="word-blocks-pool" id="listening-blocks-pool" style="width: 100%;">
+                        <!-- Populated by JS -->
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Exercise 5: General Text Translation -->
+                  <div class="exercise-panel hidden" id="ex-translation">
+                    <h4>Exercise 5: Final Translation Challenge</h4>
+                    <p class="instruction-text">Type the Spanish translation of the English sentence below:</p>
+                    <p class="source-sentence">"The cat drinks milk"</p>
+
+                    <div class="translation-input-container">
+                      <textarea id="translation-input" placeholder="Type Spanish translation..."></textarea>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- Check answer panel footer -->
+                <div class="exercise-actions">
+                  <span class="exercise-message" id="exercise-message"></span>
+                  <div style="display: flex; align-items: center;">
+                    <span class="cheat-link" onclick="revealExerciseAnswer()" style="color: #0053e2; text-decoration: underline; cursor: pointer; font-size: 11px; margin-right: 15px; font-weight: bold; font-family: var(--font-sans);">Reveal Answer (Duo Hint)</span>
+                    <button class="exercise-submit-btn" id="btn-check-answer" onclick="checkExerciseAnswer()">Check Answer</button>
+                    <button class="exercise-submit-btn hidden" id="btn-next-exercise" onclick="nextExercise()">Next Exercise &gt;&gt;</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- BBS Toaster (MSN Messenger style alert popups) -->
+          <div class="msn-toaster" id="msn-toaster">
+            <div class="toaster-header">
+              <span class="msn-messenger-icon">🤖</span>
+              <span>Duolingo Alert</span>
+              <button class="toaster-close" onclick="hideToaster()">X</button>
+            </div>
+            <div class="toaster-body">
+              <img src="logo.jpg" alt="Alert" class="toaster-avatar">
+              <div class="toaster-text">
+                <strong id="toaster-title">Buddy Alert</strong>
+                <p id="toaster-msg">xX_SpanishPro_Xx completed phrases module!</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom System Tray & Taskbar -->
+          <div class="system-taskbar">
+            <div class="start-btn" onclick="openStartMenu()">
+              <span class="start-flag">🦉</span> Start
+            </div>
+            <div class="taskbar-tabs">
+              <div class="taskbar-tab active" id="task-tab-duo" onclick="openDuoApp()">DuoLingo 2006</div>
+            </div>
+            <div class="system-tray">
+              <span class="tray-icon" onclick="toggleServerLogs()" title="Show Logs">🖥️</span>
+              <span class="tray-icon" onclick="resetDatabaseState()" title="Reset DB">🔄</span>
+              <span class="tray-time" id="system-time">10:24 AM</span>
+            </div>
+          </div>
+
+          <!-- Windows Start Menu Mock -->
+          <div class="start-menu hidden" id="start-menu">
+            <div class="start-sidebar">
+              <span>Windows Vista Nostalgia</span>
+            </div>
+            <div class="start-programs">
+              <div class="program-item" onclick="openDuoApp()">🦉 DuoLingo Application</div>
+              <div class="program-item" onclick="switchTab('tab-bbs')">💬 BBS Boards</div>
+              <div class="program-item" onclick="switchTab('tab-shop')">🪙 Lingot Shop</div>
+              <div class="program-item" onclick="toggleServerLogs()">🖥️ MySQL Command Prompt</div>
+              <div class="program-divider"></div>
+              <div class="program-item" onclick="alert('Shutdown is disabled in demo mode!')">🔴 Shut Down</div>
+            </div>
+          </div>
+ 
+          <!-- Hobby Selection Wizard Dialog Overlay -->
+          <div id="hobby-wizard-overlay" class="lesson-overlay">
+            <div class="aero-window window-active" style="width: 420px; height: 320px; position: relative; top: auto; left: auto; box-shadow: var(--aero-shadow);">
+              <div class="window-titlebar">
+                <div class="titlebar-left">
+                  <img src="logo.jpg" alt="Wizard" class="titlebar-icon">
+                  <span class="titlebar-text">Course Customization Wizard</span>
+                </div>
+              </div>
+              <div class="window-client" style="flex-direction: column; padding: 15px 20px; background: #f0f0f0;">
+                <h3 style="margin: 0 0 10px 0; color: #1b63c4;">Welcome to DuoLingo 2006!</h3>
+                <p style="font-size: 11px; margin: 0 0 15px 0; color: #555; line-height: 1.4;">
+                  Please select your primary hobby. We will prepare a specialized standalone word-learning module with vocab tailored to your interests!
+                </p>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 11.5px; margin-bottom: 20px; color: #333;">
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: bold;">
+                    <input type="radio" name="hobby-select" value="golf" checked>
+                    ⛳ Golf (hoyo, palo, pelota, verde)
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: bold;">
+                    <input type="radio" name="hobby-select" value="gaming">
+                    🎮 Gaming (consola, juego, nivel, control)
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: bold;">
+                    <input type="radio" name="hobby-select" value="cooking">
+                    🍳 Cooking (cocina, sartén, fuego, receta)
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: bold;">
+                    <input type="radio" name="hobby-select" value="reading">
+                    📚 Reading (libro, página, leer, historia)
+                  </label>
+                </div>
+                
+                <div style="margin-top: auto; display: flex; justify-content: flex-end;">
+                  <button class="exercise-submit-btn" style="padding: 5px 15px; font-size: 11px; height: auto;" onclick="completeHobbyWizard()">Finish &gt;</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div> <!-- Desktop Shell End -->
+
+        <!-- Server Logs Console Drawer (Floating / Collapsible) -->
+        <div id="server-logs-drawer" class="server-logs-drawer hidden">
+          <div class="console-header">
+            <span>MySQL / PHP Backend Activity Console</span>
+            <button class="console-close" onclick="toggleServerLogs()">_</button>
+          </div>
+          <div class="console-body" id="console-logs">
+            <p class="log-info">[PHP] php-fpm started successfully.</p>
+            <p class="log-info">[MYSQL] Connected to local database `duolingo_2006` via mysql_connect() port 3306.</p>
+            <p class="log-warning">[MYSQL WARNING] Deep join query analysis: queries taking >500ms detected. Enable "Aggressive Cache" in menu bar to resolve.</p>
+          </div>
+        </div>
+
+      </div> <!-- CRT Screen End -->
+    </div> <!-- CRT Bezel End -->
+  </div> <!-- CRT Monitor Frame End -->
+
+  <script src="app.js"></script>
+</body>
+</html>

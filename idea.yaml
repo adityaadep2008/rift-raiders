@@ -1,0 +1,75 @@
+app_metadata:
+  name: "DuoLingo 2006 Edition"
+  theme: "Retro Reboot 2026 - Early 2000s Web & Software Nostalgia"
+  vibe: "Skeuomorphic, glossy, clunky desktop application meets passive-aggressive habit-forming language tutor."
+  target_layout: "4:3 aspect ratio (optimized for 1024x768 CRT monitors)"
+
+design_language:
+  aesthetic_trends:
+    - "Windows Vista Aero Glass / Windows XP Luna style interfaces"
+    - "Heavy linear gradients, high-gloss plastic buttons with distinct bevels and drop shadows"
+    - "Pixelated desktop-era UI icons (16x16 and 32x32 sizes)"
+    - "Anti-aliased system typography (Comic Sans MS, Arial Bold, Tahoma)"
+  mascot_style:
+    - "Duo the Owl reimagined as a 3D-shaded, plastic-sheen Microsoft Office-style desktop assistant (clunky clip-art aesthetic)"
+
+core_features:
+  learning_engine:
+    exercise_types:
+  # Add this under core_features -> learning_engine -> exercise_types:
+      - type: "Mechanical Drag and Drop"
+        ux_execution: "Vocabulary words styled as heavy, beveled plastic rectangular blocks that abruptly snap into HTML table grid destination zones using absolute pixel coordinate locking."
+      - type: "Skeuomorphic Pair Matching"
+        ux_execution: "A grid-based memory match matrix utilizing high-gloss blue card components that flip with immediate 2D CSS grid transforms, clearing with early web audio MIDI chimes on correct matches."
+      - type: "Microphone Speech Check"
+        ux_execution: "Simulated via a mock Macromedia Flash Player 8 permission popup asking for mic access."
+      - type: "Listening & Writing"
+        ux_execution: "A chunky media player controller widget playing highly compressed, slightly fuzzy .wav/.mp3 audio clips."
+      - type: "Translation Exercise"
+        ux_execution: "Strict text-input areas or mechanical HTML table-based drag-and-drop word blocks instead of floating bubbles."
+    mechanics:
+# Add this under core_features -> learning_engine -> mechanics:
+      - "Arcade Combo Meter: A pixelated desktop widget that increments with consecutive correct responses, triggering an over-the-top flashing 'COMBO x2' text animation upon reaching 5 correct answers."
+
+      - "Skeuomorphic Heart Engine: 5 glossy red hearts that shatter or turn grey with a loud digital buzzer sound upon error."
+      - "Progress Status Bar: High-contrast, glossy green-to-gold progress indicator tracking lesson completion."
+
+  gamification_retention:
+    skill_tree:
+      layout: "Rigid, hierarchical branching grid layout."
+      states: "Locked skills are explicitly grayed out with physical padlock icons; unlocked skills look like glowing glass spheres."
+    streak_system:
+      ui: "A prominent sidebar widget with a 2D fire graphic and a calendar grid stamped with red 'X' markers."
+      logic: "Daily timezone tracking logic enforcing streak freeze protection if items are held in the user's inventory."
+    lingot_shop:
+      ui: "A classic desktop storefront catalog interface."
+      items:
+        - "Streak Freezes (rendered as a pixelated block of ice)"
+        - "Duo Custom Outfits (e.g., generic blue/gold 2000s tracksuits to change the avatar skin wrapper)"
+
+  social_competition:
+    leaderboards:
+      style: "Classic Bulletin Board System (BBS) / 2000s forum-style ranking tables."
+      mechanic: "Users are assigned era-appropriate tiers (e.g., 'Bronze Tier Learner', 'Post Count: 42')."
+    friend_activity:
+      ui: "A desktop 'Buddy List' sidebar panel displaying online/away status."
+      notifications: "An MSN Messenger-style toaster popup that slides up from the screen corner with a 'da-ding!' chime when a friend completes a module."
+
+backend_systems_to_generate:
+  content_schema:
+    structure: "Relational hierarchy linking Language -> Module -> Skill Node -> Exercise Poly-morphic Types."
+  streak_state_engine:
+    logic: "Timezone-aware validation script checking `last_active_date` against rolling calendar days to decrement inventory or reset streaks."
+  passive_aggressive_notification_engine:
+    automation: "Background worker simulating automated peer-pressure and guilt alerts."
+    copy_samples:
+      - "Oh, your friend [Name] did 7 levels today. What are you waiting for?"
+      - "[1 NEW MESSAGE FROM DUO]: These notifications don't seem to be working. I'll just go..."
+
+nostalgic_bonus_touches:
+  - "Loud mechanical hard-drive clicking animations during 'Checking Answer' loading states."
+  - "Loud Windows XP/Vista-inspired startup system sounds on application launch."
+  - "Flashing golden envelope pixel graphic in the top corner for new inbox alerts."
+
+
+
