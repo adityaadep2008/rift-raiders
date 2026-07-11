@@ -2134,6 +2134,10 @@ function commitLessonProgress() {
     logToConsole(`[PHP] session_destroy(); -- Transaction clean up completed.`, 'info');
     
     alert(`CONGRATULATIONS! Module completed. You earned +${xp} XP and +${lingotReward} Lingots!`);
+    
+    setTimeout(() => {
+      triggerManualGuiltTrip();
+    }, 1000);
   });
 }
 
@@ -2395,12 +2399,28 @@ function triggerManualGuiltTrip() {
   const textEl = document.getElementById('floating-duo-bubble-text');
   const avatar = document.getElementById('floating-duo-img');
   
-  isDuoSpeaking = true;
-  bubble.style.display = 'block';
-  textEl.innerHTML = '';
+  // Sidebar mascot targets to sync
+  const sidebarBubble = document.getElementById('mascot-bubble');
+  const sidebarAvatar = document.getElementById('mascot-img');
+  let sidebarTextEl = null;
+  if (sidebarBubble) {
+    sidebarTextEl = sidebarBubble.querySelector('p') || sidebarBubble;
+  }
   
-  avatar.classList.remove('speaking-flap');
-  avatar.classList.add('thinking-nod');
+  isDuoSpeaking = true;
+  if (bubble) bubble.style.display = 'block';
+  if (textEl) textEl.innerHTML = '';
+  if (sidebarTextEl) sidebarTextEl.innerHTML = '';
+  
+  if (avatar) {
+    avatar.classList.remove('speaking-flap');
+    avatar.classList.add('thinking-nod');
+  }
+  if (sidebarAvatar) {
+    sidebarAvatar.classList.remove('speaking-flap');
+    sidebarAvatar.classList.add('thinking-nod');
+  }
+  
   logToConsole(`[PHP] guilt_trip_agent: Parsing metrics. Querying chosen LLM backend...`, 'info');
   
   const youRow = db.bbs_leaderboard.find(x => x.user.includes("You"));
@@ -2420,8 +2440,14 @@ function triggerManualGuiltTrip() {
     body: JSON.stringify(statePayload)
   })
     .then(response => {
-      avatar.classList.remove('thinking-nod');
-      avatar.classList.add('speaking-flap');
+      if (avatar) {
+        avatar.classList.remove('thinking-nod');
+        avatar.classList.add('speaking-flap');
+      }
+      if (sidebarAvatar) {
+        sidebarAvatar.classList.remove('thinking-nod');
+        sidebarAvatar.classList.add('speaking-flap');
+      }
       
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -2430,7 +2456,8 @@ function triggerManualGuiltTrip() {
       function readStream() {
         reader.read().then(({ done, value }) => {
           if (done) {
-            avatar.classList.remove('speaking-flap');
+            if (avatar) avatar.classList.remove('speaking-flap');
+            if (sidebarAvatar) sidebarAvatar.classList.remove('speaking-flap');
             isDuoSpeaking = false;
             logToConsole(`[PHP] guilt_trip_agent: Raw stream complete.`);
             return;
@@ -2448,8 +2475,12 @@ function triggerManualGuiltTrip() {
                 const parsed = JSON.parse(jsonStr);
                 
                 if (parsed.error) {
-                  textEl.innerHTML = `<span style="color:#ff3333; font-weight:bold;">[ERROR] ${parsed.error}</span>`;
-                  avatar.classList.remove('speaking-flap');
+                  const errMsg = `<span style="color:#ff3333; font-weight:bold;">[ERROR] ${parsed.error}</span>`;
+                  if (textEl) textEl.innerHTML = errMsg;
+                  if (sidebarTextEl) sidebarTextEl.innerHTML = errMsg;
+                  
+                  if (avatar) avatar.classList.remove('speaking-flap');
+                  if (sidebarAvatar) sidebarAvatar.classList.remove('speaking-flap');
                   isDuoSpeaking = false;
                   return;
                 }
@@ -2458,7 +2489,10 @@ function triggerManualGuiltTrip() {
                   if (parsed.text.startsWith('[SYSTEM WARNING]')) {
                     logToConsole(parsed.text.trim(), 'warning');
                   } else {
-                    typewriteText(parsed.text, textEl);
+                    const targets = [];
+                    if (textEl) targets.push(textEl);
+                    if (sidebarTextEl) targets.push(sidebarTextEl);
+                    typewriteText(parsed.text, targets);
                   }
                 }
               } catch (e) {
@@ -2472,21 +2506,31 @@ function triggerManualGuiltTrip() {
       readStream();
     })
     .catch(err => {
-      avatar.classList.remove('thinking-nod');
-      avatar.classList.remove('speaking-flap');
+      if (avatar) {
+        avatar.classList.remove('thinking-nod');
+        avatar.classList.remove('speaking-flap');
+      }
+      if (sidebarAvatar) {
+        sidebarAvatar.classList.remove('thinking-nod');
+        sidebarAvatar.classList.remove('speaking-flap');
+      }
       isDuoSpeaking = false;
       logToConsole(`[SYSTEM ERROR] Guilt trip backend request failed: ${err.message}`, 'error');
-      textEl.innerHTML = `<span style="color:#ff3333; font-weight:bold;">Connection failure. Cannot establish network handshake with Duo. OMFG plz run server.py!</span>`;
+      const errFail = `<span style="color:#ff3333; font-weight:bold;">Connection failure. Cannot establish network handshake with Duo. OMFG plz run server.py!</span>`;
+      if (textEl) textEl.innerHTML = errFail;
+      if (sidebarTextEl) sidebarTextEl.innerHTML = errFail;
     });
 }
 
 let typewriterQueue = [];
 let typewriterInterval = null;
 
-function typewriteText(text, targetEl) {
+function typewriteText(text, targetEls) {
   for (const char of text) {
     typewriterQueue.push(char);
   }
+  
+  const targets = Array.isArray(targetEls) ? targetEls : [targetEls];
   
   if (!typewriterInterval) {
     typewriterInterval = setInterval(() => {
@@ -2497,11 +2541,12 @@ function typewriteText(text, targetEl) {
       }
       
       const char = typewriterQueue.shift();
-      if (char === '\n') {
-        targetEl.innerHTML += '<br>';
-      } else {
-        targetEl.innerHTML += char;
-      }
+      const content = char === '\n' ? '<br>' : char;
+      
+      targets.forEach(el => {
+        if (el) el.innerHTML += content;
+      });
+      
       audio.playTypewriterSound();
     }, 30);
   }
