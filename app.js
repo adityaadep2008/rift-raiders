@@ -158,7 +158,6 @@ class RetroAudioEngine {
     this.init();
     const now = this.ctx.currentTime;
     
-    // Split phrase into words, play a metallic pitch for each word
     const words = phrase.toLowerCase().replace(/[?,!¿]/g, '').split(' ');
     
     words.forEach((word, wordIndex) => {
@@ -171,18 +170,16 @@ class RetroAudioEngine {
       const delay = wordIndex * 0.42;
       const duration = 0.32;
       
-      osc.type = 'sawtooth'; // retro buzz-saw speak
+      osc.type = 'sawtooth';
       
-      // Pitch shifts based on word length to simulate speech inflections
       const baseFreq = 160 + (word.length * 12) + (Math.sin(wordIndex * 2) * 25);
       osc.frequency.setValueAtTime(baseFreq, now + delay);
       
-      // Metallic frequency modulation
       mod.frequency.setValueAtTime(50, now + delay);
       modGain.gain.setValueAtTime(18, now + delay);
       
       filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(850, now + delay); // vocal formant-like filter
+      filter.frequency.setValueAtTime(850, now + delay);
       filter.Q.setValueAtTime(2.5, now + delay);
       
       gain.gain.setValueAtTime(0, now + delay);
@@ -206,7 +203,7 @@ class RetroAudioEngine {
 
 const audio = new RetroAudioEngine();
 
-// Resume AudioContext on first body click to satisfy browser security
+// Resume AudioContext on first body click
 window.addEventListener('click', () => {
   audio.init();
   if (audio.ctx && audio.ctx.state === 'suspended') {
@@ -231,8 +228,8 @@ const db = {
     streak_freezes: 0,
     has_tracksuit: false,
     cache_enabled: false,
-    hobby: 'golf', // default, customizable
-    learned_words: [] // Tracking user learned vocab
+    hobby: 'golf',
+    learned_words: [] // in-memory tracking of vocab
   },
   
   bbs_leaderboard: [
@@ -244,15 +241,14 @@ const db = {
   ],
   
   lessons: {
-    'basics-1': { completed: false, current_step: 3, total_steps: 5, vocab: ["el", "niño", "come", "una", "manzana"] },
-    'phrases': { completed: false, current_step: 0, total_steps: 5, vocab: ["hola", "cómo", "estás", "gracias", "adiós"] },
-    'food': { completed: false, locked: true, vocab: ["leche", "agua", "pan", "queso", "fruta"] },
+    'basics-1': { completed: false, current_step: 3, total_steps: 5, vocab: ["el niño", "come", "una manzana", "leche", "bebe"] },
+    'phrases': { completed: false, current_step: 0, total_steps: 5, vocab: ["hola", "cómo estás", "gracias", "adiós"] },
+    'food': { completed: false, locked: true, vocab: ["pan", "queso", "fruta", "agua"] },
     'animals': { completed: false, locked: true, vocab: ["perro", "gato", "pájaro", "caballo", "pez"] },
-    'hobby': { completed: false, locked: true, vocab: [] } // dynamically set when hobby chosen
+    'hobby': { completed: false, locked: true, vocab: [] }
   }
 };
 
-// Map vocab based on dynamic hobbies
 const hobbyVocabMap = {
   golf: ["hoyo", "palo", "pelota", "verde"],
   gaming: ["consola", "juego", "nivel", "control"],
@@ -260,7 +256,61 @@ const hobbyVocabMap = {
   reading: ["libro", "página", "leer", "historia"]
 };
 
-// Log queries and backend operations to our visible CRT developer console
+// PowerPoint Slide decks database
+const lectureDecks = {
+  'basics-1': [
+    { word: "el niño", english: "The boy", example: "Example: 'El niño come una manzana' (The boy eats an apple)" },
+    { word: "come", english: "Eats", example: "Example: 'El niño come pan' (The boy eats bread)" },
+    { word: "una manzana", english: "An apple", example: "Example: 'La manzana es roja' (The apple is red)" },
+    { word: "leche", english: "Milk", example: "Example: 'El gato bebe leche' (The cat drinks milk)" },
+    { word: "bebe", english: "Drinks", example: "Example: 'El perro bebe agua' (The dog drinks water)" }
+  ],
+  'phrases': [
+    { word: "hola", english: "Hello", example: "Example: 'Hola, ¿cómo estás?' (Hello, how are you?)" },
+    { word: "cómo estás", english: "How are you", example: "Example: 'Hola, ¿cómo estás, amigo?' (Hello, how are you, friend?)" },
+    { word: "gracias", english: "Thank you", example: "Example: 'Muchas gracias por la comida' (Thank you very much for the food)" },
+    { word: "adiós", english: "Goodbye", example: "Example: 'Gracias, adiós' (Thank you, goodbye)" }
+  ],
+  'food': [
+    { word: "pan", english: "Bread", example: "Example: 'El niño come pan' (The boy eats bread)" },
+    { word: "queso", english: "Cheese", example: "Example: 'El queso es amarillo' (The cheese is yellow)" },
+    { word: "fruta", english: "Fruit", example: "Example: 'La manzana es una fruta' (The apple is a fruit)" },
+    { word: "agua", english: "Water", example: "Example: 'El perro bebe agua' (The dog drinks water)" }
+  ],
+  'animals': [
+    { word: "perro", english: "Dog", example: "Example: 'El perro y el gato' (The dog and the cat)" },
+    { word: "gato", english: "Cat", example: "Example: 'El gato bebe leche' (The cat drinks milk)" },
+    { word: "pájaro", english: "Bird", example: "Example: 'El pájaro vuela' (The bird flies)" },
+    { word: "caballo", english: "Horse", example: "Example: 'El caballo corre rápido' (The horse runs fast)" },
+    { word: "pez", english: "Fish", example: "Example: 'El pez vive en the water' (The fish lives in the water)" }
+  ],
+  'hobby-golf': [
+    { word: "hoyo", english: "Hole", example: "Example: 'La pelota está en el hoyo' (The ball is in the hole)" },
+    { word: "palo", english: "Club", example: "Example: 'El palo es verde' (The club is green)" },
+    { word: "pelota", english: "Ball", example: "Example: 'El niño golpea la pelota' (The boy hits the ball)" },
+    { word: "verde", english: "Green", example: "Example: 'El césped es verde' (The grass is green)" }
+  ],
+  'hobby-gaming': [
+    { word: "consola", english: "Console", example: "Example: 'Yo juego en la consola' (I play on the console)" },
+    { word: "juego", english: "Game", example: "Example: 'El juego es divertido' (The game is fun)" },
+    { word: "nivel", english: "Level", example: "Example: 'El nivel es difícil' (The level is difficult)" },
+    { word: "control", english: "Controller", example: "Example: 'El juego tiene un control' (The game has a controller)" }
+  ],
+  'hobby-cooking': [
+    { word: "cocina", english: "Kitchen", example: "Example: 'Yo cocino en la cocina' (I cook in the kitchen)" },
+    { word: "sartén", english: "Pan", example: "Example: 'El niño usa la sartén' (The boy uses the pan)" },
+    { word: "fuego", english: "Fire", example: "Example: 'El fuego está caliente' (The fire is hot)" },
+    { word: "receta", english: "Recipe", example: "Example: 'La receta es muy fácil' (The recipe is very easy)" }
+  ],
+  'hobby-reading': [
+    { word: "libro", english: "Book", example: "Example: 'El niño lee el libro' (The boy reads the book)" },
+    { word: "página", english: "Page", example: "Example: 'La página es blanca' (The page is white)" },
+    { word: "leer", english: "Read", example: "Example: 'Me gusta leer' (I like to read)" },
+    { word: "historia", english: "Story", example: "Example: 'Yo leo una historia' (I read a story)" }
+  ]
+};
+
+// Log queries and backend operations to CRT console drawer
 function logToConsole(message, type = 'info') {
   const container = document.getElementById('console-logs');
   if (!container) return;
@@ -344,21 +394,16 @@ window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     audio.playStartup();
     
-    // Hide boot screen
     document.getElementById('boot-screen').classList.add('hidden');
     document.getElementById('desktop').classList.remove('hidden');
     
-    // Initial UI populate
     updateDashboardUI();
     initDraggableWindow();
     initSystemTrayTime();
     
-    // Prompt wizard immediately on first boot
     openHobbyWizard();
-    
-    // Start MSN Buddy Messenger Toasters
     startBuddyMessengerSimulation();
-  }, 3500); // 3.5s boot loading
+  }, 3500);
 });
 
 function initSystemTrayTime() {
@@ -492,7 +537,6 @@ function updateDashboardUI() {
   
   const foodNode = document.getElementById('node-food');
   const animalsNode = document.getElementById('node-animals');
-  
   const basicModulesDone = db.lessons['basics-1'].completed && db.lessons['phrases'].completed;
   
   if (basicModulesDone) {
@@ -657,33 +701,36 @@ function completeHobbyWizard() {
 
 
 // ==========================================================================
-// 7. Interactive Lesson Module State Machine (Dynamic Vocabulary & Scale)
+// 7. Interactive Lesson Module State Machine (PowerPoint PowerPoint 2003)
 // ==========================================================================
 let currentLessonId = null;
-let currentExerciseIndex = 0; // 0 to 4
+let currentExerciseIndex = 0;
 let lessonHearts = 5;
 let lessonCombo = 0;
-// Lesson transaction state (session flag is a local dictionary)
+let activeExercises = [];
+
+let activeLectureSlides = [];
+let currentPptSlideIndex = 0;
+
 let lessonSessionState = {
   answers_correct: 0,
   xp_gain: 0,
   progress_updated: false
 };
 
-// Custom coded templates that automatically leverage "db.users.learned_words"
-// if already done, boosting complexity and reusing vocabulary!
 function generateDynamicExercises(lessonId) {
   const wordsCount = db.users.learned_words.length;
   logToConsole(`[PHP] Generating exercises. Reusing user vocabulary cache (${wordsCount} words loaded).`);
   
-  // Basics 1
+  const hasBasics = db.users.learned_words.includes("el niño");
+  
   if (lessonId === 'basics-1') {
     return [
       {
         type: 'drag-drop',
         source: "The boy eats an apple",
-        expected: ['block-el', 'block-nino', 'block-come', 'block-una', 'block-manzana'],
-        blocks: ['El', 'come', 'manzana', 'perro', 'niño', 'una', 'leche']
+        expected: ['block-el-nino', 'block-come', 'block-una-manzana'],
+        blocks: ['el niño', 'come', 'una manzana', 'perro', 'leche']
       },
       {
         type: 'pair-matching',
@@ -713,14 +760,13 @@ function generateDynamicExercises(lessonId) {
     ];
   }
   
-  // Phrases
   if (lessonId === 'phrases') {
     return [
       {
         type: 'drag-drop',
         source: "Hello, how are you?",
-        expected: ['block-hola', 'block-como', 'block-estas'],
-        blocks: ['Hola', 'cómo', 'estás', 'gracias', 'adiós', 'niño', 'perro']
+        expected: ['block-hola', 'block-como-estas'],
+        blocks: ['hola', 'cómo estás', 'gracias', 'adiós', 'niño', 'perro']
       },
       {
         type: 'pair-matching',
@@ -750,16 +796,13 @@ function generateDynamicExercises(lessonId) {
     ];
   }
 
-  // Food - Reuses Basics 1 vocabulary ("el niño", "come", "manzana")
   if (lessonId === 'food') {
-    const hasBasics = db.users.learned_words.includes("niño");
     return [
       {
         type: 'drag-drop',
-        // Augmented complexity: reuse "eats" and "boy" from Basics 1!
         source: hasBasics ? "The boy eats bread" : "The man eats bread",
-        expected: hasBasics ? ['block-el', 'block-nino', 'block-come', 'block-pan'] : ['block-el', 'block-hombre', 'block-come', 'block-pan'],
-        blocks: hasBasics ? ['El', 'niño', 'come', 'pan', 'fruta', 'leche', 'queso'] : ['El', 'hombre', 'come', 'pan', 'fruta', 'leche', 'queso']
+        expected: hasBasics ? ['block-el-nino', 'block-come', 'block-pan'] : ['block-el-hombre', 'block-come', 'block-pan'],
+        blocks: hasBasics ? ['el niño', 'come', 'pan', 'fruta', 'leche', 'queso'] : ['el hombre', 'come', 'pan', 'fruta', 'leche', 'queso']
       },
       {
         type: 'pair-matching',
@@ -776,11 +819,10 @@ function generateDynamicExercises(lessonId) {
       },
       {
         type: 'listening',
-        // Reuses "boy" (niño) and "drinks" (bebe)
-        audioPhrase: "El niño bebe agua",
-        expectedText: "el niño bebe agua",
-        expectedBlocks: ['listening-el', 'listening-nino', 'listening-bebe', 'listening-agua'],
-        blocks: ['El', 'niño', 'bebe', 'agua', 'pan', 'queso']
+        audioPhrase: hasBasics ? "El niño bebe agua" : "El hombre bebe agua",
+        expectedText: hasBasics ? "el niño bebe agua" : "el hombre bebe agua",
+        expectedBlocks: hasBasics ? ['listening-el', 'listening-nino', 'listening-bebe', 'listening-agua'] : ['listening-el', 'listening-hombre', 'listening-bebe', 'listening-agua'],
+        blocks: ['El', 'niño', 'bebe', 'agua', 'pan', 'queso', 'hombre']
       },
       {
         type: 'translation',
@@ -790,15 +832,13 @@ function generateDynamicExercises(lessonId) {
     ];
   }
 
-  // Animals - Reuses Basics 1 vocabulary ("el perro", "el gato", "come")
   if (lessonId === 'animals') {
     return [
       {
         type: 'drag-drop',
-        // Reuses "come" (eats)
         source: "The cat eats a bird",
-        expected: ['block-el', 'block-gato', 'block-come', 'block-un', 'block-pajaro'],
-        blocks: ['El', 'gato', 'come', 'un', 'pájaro', 'perro', 'pez', 'caballo']
+        expected: ['block-el-gato', 'block-come', 'block-un-pajaro'],
+        blocks: ['el gato', 'come', 'un pájaro', 'perro', 'pez', 'caballo']
       },
       {
         type: 'pair-matching',
@@ -828,7 +868,6 @@ function generateDynamicExercises(lessonId) {
     ];
   }
 
-  // Specialized Hobby Modules (Golf, Gaming, Cooking, Reading)
   if (lessonId === 'hobby') {
     const hobby = db.users.hobby;
     
@@ -836,9 +875,9 @@ function generateDynamicExercises(lessonId) {
       return [
         {
           type: 'drag-drop',
-          source: "The boy hits the ball",
-          expected: ['block-el', 'block-nino', 'block-golpea', 'block-la', 'block-pelota'],
-          blocks: ['El', 'niño', 'golpea', 'la', 'pelota', 'hoyo', 'verde', 'palo']
+          source: hasBasics ? "The boy hits the ball" : "The man hits the ball",
+          expected: hasBasics ? ['block-el-nino', 'block-golpea', 'block-la-pelota'] : ['block-el-hombre', 'block-golpea', 'block-la-pelota'],
+          blocks: hasBasics ? ['el niño', 'golpea', 'la pelota', 'hoyo', 'verde', 'palo'] : ['el hombre', 'golpea', 'la pelota', 'hoyo', 'verde', 'palo']
         },
         {
           type: 'pair-matching',
@@ -872,9 +911,9 @@ function generateDynamicExercises(lessonId) {
       return [
         {
           type: 'drag-drop',
-          source: "The boy plays the game",
-          expected: ['block-el', 'block-nino', 'block-juega', 'block-el', 'block-juego'],
-          blocks: ['El', 'niño', 'juega', 'el', 'juego', 'consola', 'control', 'nivel']
+          source: hasBasics ? "The boy plays the game" : "The man plays the game",
+          expected: hasBasics ? ['block-el-nino', 'block-juega', 'block-el-juego'] : ['block-el-hombre', 'block-juega', 'block-el-juego'],
+          blocks: hasBasics ? ['el niño', 'juega', 'el juego', 'consola', 'control', 'nivel'] : ['el hombre', 'juega', 'el juego', 'consola', 'control', 'nivel']
         },
         {
           type: 'pair-matching',
@@ -908,9 +947,9 @@ function generateDynamicExercises(lessonId) {
       return [
         {
           type: 'drag-drop',
-          source: "The boy uses the pan",
-          expected: ['block-el', 'block-nino', 'block-usa', 'block-la', 'block-sarten'],
-          blocks: ['El', 'niño', 'usa', 'la', 'sartén', 'fuego', 'cocina', 'receta']
+          source: hasBasics ? "The boy uses the pan" : "The man uses the pan",
+          expected: hasBasics ? ['block-el-nino', 'block-usa', 'block-la-sarten'] : ['block-el-hombre', 'block-usa', 'block-la-sarten'],
+          blocks: hasBasics ? ['el niño', 'usa', 'la sartén', 'fuego', 'cocina', 'receta'] : ['el hombre', 'usa', 'la sartén', 'fuego', 'cocina', 'receta']
         },
         {
           type: 'pair-matching',
@@ -944,9 +983,9 @@ function generateDynamicExercises(lessonId) {
       return [
         {
           type: 'drag-drop',
-          source: "The boy reads the book",
-          expected: ['block-el', 'block-nino', 'block-lee', 'block-el', 'block-libro'],
-          blocks: ['El', 'niño', 'lee', 'el', 'libro', 'página', 'historia', 'leer']
+          source: hasBasics ? "The boy reads the book" : "The man reads the book",
+          expected: hasBasics ? ['block-el-nino', 'block-lee', 'block-el-libro'] : ['block-el-hombre', 'block-lee', 'block-el-libro'],
+          blocks: hasBasics ? ['el niño', 'lee', 'el libro', 'página', 'historia', 'leer'] : ['el hombre', 'lee', 'el libro', 'página', 'historia', 'leer']
         },
         {
           type: 'pair-matching',
@@ -980,8 +1019,6 @@ function generateDynamicExercises(lessonId) {
   return [];
 }
 
-let activeExercises = [];
-
 function startLesson(lessonId) {
   runQuery(`SELECT * FROM exercises WHERE module_id='${lessonId}' ORDER BY difficulty ASC;`, () => {
     currentLessonId = lessonId;
@@ -989,7 +1026,15 @@ function startLesson(lessonId) {
     lessonHearts = 5;
     lessonCombo = 0;
     
-    // Construct dynamic context exercises (scales difficulty & tracks vocab)
+    // Check if slides lecture deck exists
+    let deckKey = lessonId;
+    if (lessonId === 'hobby') {
+      deckKey = `hobby-${db.users.hobby}`;
+    }
+    
+    activeLectureSlides = lectureDecks[deckKey] || [];
+    currentPptSlideIndex = 0;
+    
     activeExercises = generateDynamicExercises(lessonId);
     
     lessonSessionState = {
@@ -1002,9 +1047,118 @@ function startLesson(lessonId) {
     resetHeartsUI();
     updateComboUI();
     
-    loadExercise(0);
+    if (activeLectureSlides.length > 0) {
+      launchLectureMode();
+    } else {
+      launchQuizMode();
+    }
+    
     logToConsole(`[PHP] session_start(); $_SESSION['lesson_id'] = '${lessonId}'; $_SESSION['hearts'] = 5; -- Transaction flag created`);
   });
+}
+
+function launchLectureMode() {
+  document.getElementById('lecture-zone').classList.remove('hidden');
+  document.getElementById('exercise-zone').classList.add('hidden');
+  document.getElementById('lesson-progress-row').style.display = 'none';
+  
+  // Render outlines
+  const sidebar = document.getElementById('ppt-thumbnails');
+  sidebar.innerHTML = '';
+  activeLectureSlides.forEach((slide, index) => {
+    sidebar.innerHTML += `
+      <div class="ppt-thumb" id="ppt-thumb-${index}" onclick="selectPptSlide(${index})">
+        <span class="ppt-thumb-num">Slide ${index + 1}</span>
+        <span class="ppt-thumb-text" style="font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${slide.word}</span>
+      </div>
+    `;
+  });
+  
+  loadPptSlide(0);
+  logToConsole(`[PHP] PPT PRESENTATION: Loading lecture slides for '${currentLessonId}'...`, 'info');
+}
+
+function loadPptSlide(index) {
+  currentPptSlideIndex = index;
+  
+  activeLectureSlides.forEach((_, idx) => {
+    const thumb = document.getElementById(`ppt-thumb-${idx}`);
+    if (thumb) {
+      if (idx === index) thumb.classList.add('active');
+      else thumb.classList.remove('active');
+    }
+  });
+  
+  const slide = activeLectureSlides[index];
+  document.getElementById('ppt-slide-title').innerText = `Vocabulary Presentation - Word ${index + 1}`;
+  document.getElementById('lecture-vocab-sp').innerText = slide.word;
+  document.getElementById('lecture-vocab-en').innerText = slide.english;
+  document.getElementById('lecture-vocab-ex').innerText = slide.example;
+  
+  document.getElementById('ppt-current-slide-num').innerText = index + 1;
+  document.getElementById('ppt-total-slides-num').innerText = activeLectureSlides.length;
+  
+  document.getElementById('btn-ppt-back').disabled = (index === 0);
+  
+  const nextBtn = document.getElementById('btn-ppt-next');
+  if (index === activeLectureSlides.length - 1) {
+    nextBtn.innerText = "Start Quiz >>";
+    nextBtn.style.background = 'var(--green-btn-gradient)';
+    nextBtn.style.borderColor = '#2f732f';
+  } else {
+    nextBtn.innerText = "Next >";
+    nextBtn.style.background = 'var(--blue-btn-gradient)';
+    nextBtn.style.borderColor = 'var(--xp-blue-border)';
+  }
+  
+  playLectureWordSound();
+}
+
+function selectPptSlide(index) {
+  audio.playHddClick();
+  loadPptSlide(index);
+}
+
+function navigatePptSlide(direction) {
+  const nextIndex = currentPptSlideIndex + direction;
+  
+  if (nextIndex >= 0 && nextIndex < activeLectureSlides.length) {
+    audio.playHddClick();
+    loadPptSlide(nextIndex);
+  } else if (nextIndex === activeLectureSlides.length) {
+    audio.playCorrect();
+    commitLectureVocabulary();
+  }
+}
+
+function playLectureWordSound() {
+  const word = activeLectureSlides[currentPptSlideIndex].word;
+  audio.playRoboticSpeech(word);
+  logToConsole(`[PHP] speech_synth: Pronouncing lecture vocable: "${word}".`);
+}
+
+function commitLectureVocabulary() {
+  logToConsole(`[PHP] Finished PowerPoint presentation. Registering vocabulary into profile...`, 'info');
+  
+  activeLectureSlides.forEach(slide => {
+    if (!db.users.learned_words.includes(slide.word)) {
+      db.users.learned_words.push(slide.word);
+      logToConsole(`[MYSQL] INSERT INTO user_vocabulary (user_id, word) VALUES (1, '${slide.word}'); -- Learned Word Cached`);
+    }
+  });
+  
+  // Re-generate quiz sentences to reuse these newly committed terms
+  activeExercises = generateDynamicExercises(currentLessonId);
+  launchQuizMode();
+}
+
+function launchQuizMode() {
+  document.getElementById('lecture-zone').classList.add('hidden');
+  document.getElementById('exercise-zone').classList.remove('hidden');
+  document.getElementById('lesson-progress-row').style.display = 'flex';
+  
+  loadExercise(0);
+  logToConsole(`[PHP] PPT CLOSED. Starting quiz exercises for '${currentLessonId}'...`, 'info');
 }
 
 function loadExercise(index) {
@@ -1021,16 +1175,14 @@ function loadExercise(index) {
   if (currentEx.type === 'drag-drop') {
     document.getElementById('ex-drag-drop').classList.remove('hidden');
     
-    // Override sentence and drag blocks dynamically
     const container = document.getElementById('ex-drag-drop');
     container.querySelector('.source-sentence').innerText = `"${currentEx.source}"`;
     
     const pool = document.getElementById('word-blocks-pool');
     pool.innerHTML = '';
     
-    currentEx.blocks.forEach((bText, idx) => {
-      // Map back to ID format standard (derived from lower text block)
-      const cleanId = `block-${bText.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")}`;
+    currentEx.blocks.forEach(bText => {
+      const cleanId = `block-${bText.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-")}`;
       pool.innerHTML += `<div class="word-block" draggable="true" id="${cleanId}">${bText}</div>`;
     });
     
@@ -1054,7 +1206,6 @@ function loadExercise(index) {
     initTranslationExercise();
   }
   
-  // Reset Action Footer
   document.getElementById('exercise-message').innerText = '';
   document.getElementById('exercise-message').className = 'exercise-message';
   document.getElementById('btn-check-answer').classList.remove('hidden');
@@ -1094,10 +1245,8 @@ function decrementHearts() {
 function handleGameOver() {
   audio.playError();
   alert("GAME OVER! You lost all your hearts. Aborting lesson progress...");
-  
   logToConsole(`[PHP] TRANSACTION ROLLBACK: Lesson session aborted. Discarding $_SESSION transaction flag.`, 'error');
   logToConsole(`[MYSQL] ROLLBACK; -- Reverting database changes`, 'error');
-  
   document.getElementById('lesson-overlay').classList.add('hidden');
 }
 
@@ -1201,8 +1350,6 @@ function initPairMatchingExercise() {
   matchedCount = 0;
   
   const currentEx = activeExercises[currentExerciseIndex];
-  
-  // Clone cards list
   const words = JSON.parse(JSON.stringify(currentEx.pairs));
   words.sort(() => Math.random() - 0.5);
   
@@ -1226,7 +1373,6 @@ function selectMatchCard(card) {
   if (selectedCards.length === 2) {
     const c1 = selectedCards[0];
     const c2 = selectedCards[1];
-    
     const pair1 = c1.getAttribute('data-pair-id');
     const pair2 = c2.getAttribute('data-pair-id');
     
@@ -1300,7 +1446,6 @@ function denyFlashMic() {
 
 function toggleRecordMic() {
   if (!flashMicAllowed) return;
-  
   const recBtn = document.getElementById('btn-record-mic');
   
   if (!isRecordingMic) {
@@ -1310,7 +1455,6 @@ function toggleRecordMic() {
     
     const currentEx = activeExercises[currentExerciseIndex];
     document.getElementById('recorder-display').innerText = `RECORDING SPEECH: "${currentEx.speech}"`;
-    
     logToConsole(`[PHP] Capture stream: opening audio recording pipeline...`);
     
     setTimeout(() => {
@@ -1399,7 +1543,7 @@ function initListeningExercise() {
   pool.innerHTML = '';
   
   currentEx.blocks.forEach(bText => {
-    const cleanId = `listening-${bText.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")}`;
+    const cleanId = `listening-${bText.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-")}`;
     pool.innerHTML += `<div class="word-block" draggable="true" id="${cleanId}">${bText}</div>`;
   });
   
@@ -1439,7 +1583,6 @@ function initListeningExercise() {
 
 function playWinampAudio() {
   if (isWinampPlaying) return;
-  
   isWinampPlaying = true;
   audio.playHddClick();
   
@@ -1461,7 +1604,6 @@ function playWinampAudio() {
       bar.style.height = `${height}px`;
     });
     
-    // Auto stop after 3 seconds
     if (elapsed >= 3) {
       stopWinampAudio();
     }
@@ -1481,13 +1623,13 @@ function stopWinampAudio() {
 function checkListeningAnswer() {
   const currentEx = activeExercises[currentExerciseIndex];
   
-  // Checking Method 1: Keyboard Typing input
+  // Typing Check
   const input = document.getElementById('winamp-transcription').value.trim().toLowerCase();
   const normalized = input.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?¿]/g,"").replace(/\s+/g," ");
   const normalizedTarget = currentEx.expectedText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?¿]/g,"").replace(/\s+/g," ");
   if (normalized === normalizedTarget) return true;
   
-  // Checking Method 2: Mechanical Drag & Drop blocks
+  // Drag Drop blocks check
   const dropZone = document.getElementById('listening-drop-zone');
   const slots = dropZone.querySelectorAll('.table-slot');
   let blocksCorrect = true;
@@ -1574,7 +1716,6 @@ function nextExercise() {
 
 function commitLessonProgress() {
   logToConsole(`[PHP] Committing lesson transaction...`, 'info');
-  
   const xp = lessonSessionState.xp_gain;
   const lingotReward = 2;
   
@@ -1584,7 +1725,7 @@ function commitLessonProgress() {
     db.lessons[currentLessonId].completed = true;
     db.lessons[currentLessonId].current_step = 5;
     
-    // Add completed vocabulary to learned words list database
+    // Add completed vocabulary to learned words list
     const completedVocab = db.lessons[currentLessonId].vocab || [];
     completedVocab.forEach(word => {
       if (!db.users.learned_words.includes(word)) {
@@ -1595,7 +1736,6 @@ function commitLessonProgress() {
     
     logToConsole(`[PHP] Learned words cache rebuilt. Total vocabulary size: ${db.users.learned_words.length} items.`);
     
-    // Update poster profile BBS scores
     db.bbs_leaderboard[3].xp += xp;
     db.bbs_leaderboard[3].posts += 1;
     
@@ -1623,10 +1763,9 @@ function unlockAllSkills() {
   db.lessons['animals'].locked = false;
   db.lessons['hobby'].locked = false;
   
-  // Fill vocabulary with baseline to simulate progress
   db.users.learned_words = [
-    "el", "niño", "come", "una", "manzana", 
-    "hola", "cómo", "estás", "gracias", "adiós"
+    "el niño", "come", "una manzana", "leche", "bebe", 
+    "hola", "cómo estás", "gracias", "adiós"
   ];
   
   updateDashboardUI();
@@ -1673,10 +1812,8 @@ function revealExerciseAnswer() {
     }, 100);
     logToConsole(`[CHEAT] Bypassed Microphone speech validation.`);
   } else if (ex.type === 'listening') {
-    // Fill transcription text area
     document.getElementById('winamp-transcription').value = ex.audioPhrase;
     
-    // Fill blocks as well
     const dropZone = document.getElementById('listening-drop-zone');
     const slots = dropZone.querySelectorAll('.table-slot');
     ex.expectedBlocks.forEach((blockId, index) => {

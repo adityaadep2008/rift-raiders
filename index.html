@@ -287,7 +287,7 @@
 
               <!-- Lesson Content Wrapper -->
               <div class="lesson-workspace">
-                <div class="lesson-progress-row">
+                <div class="lesson-progress-row" id="lesson-progress-row">
                   <div class="hearts-engine">
                     <!-- 5 hearts -->
                     <span class="heart-slot" id="heart-1">❤️</span>
@@ -306,8 +306,47 @@
                   </div>
                 </div>
 
+                <!-- PowerPoint 2003 Style Vocabulary Lecture Zone -->
+                <div id="lecture-zone" class="lecture-zone hidden">
+                  <div class="ppt-window">
+                    <!-- Left Outline Sidebar (Thumbnails) -->
+                    <div class="ppt-sidebar" id="ppt-thumbnails">
+                      <!-- Outline slides filled dynamically -->
+                    </div>
+                    
+                    <!-- Main Presentation Slide Area -->
+                    <div class="ppt-slide-area">
+                      <div class="ppt-slide" id="ppt-slide-card">
+                        <div class="ppt-slide-header" id="ppt-slide-title">Slide 1: Intro</div>
+                        <div class="ppt-slide-body">
+                          <div class="flashcard-spanish" style="display: flex; align-items: center;">
+                            <span class="vocab-term" id="lecture-vocab-sp" style="font-size: 24px; font-weight: bold; color: #1b63c4; font-family: var(--font-sans);">el niño</span>
+                            <button class="winamp-btn listen-btn" id="lecture-listen-btn" onclick="playLectureWordSound()" style="padding: 4px 10px; font-size: 11px; margin-left: 15px;">🗣️ Pronounce</button>
+                          </div>
+                          <div class="flashcard-separator" style="height: 1px; background: #ddd; margin: 15px 0;"></div>
+                          <div class="flashcard-english" id="lecture-vocab-en" style="font-size: 18px; font-weight: bold; color: #ff7f00; font-family: var(--font-sans);">The boy</div>
+                          
+                          <div class="flashcard-example" id="lecture-vocab-ex" style="margin-top: 25px; font-style: italic; font-size: 11px; color: #666; line-height: 1.4; font-family: var(--font-sans);">
+                            Example: "El niño come una manzana" (The boy eats an apple)
+                          </div>
+                        </div>
+                        <div class="ppt-slide-footer">Slide <span id="ppt-current-slide-num">1</span> of <span id="ppt-total-slides-num">5</span></div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- PowerPoint Navigation Footer -->
+                  <div class="ppt-footer-controls" style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 15px; margin-top: 15px;">
+                    <span style="font-size: 10px; color: #777; font-family: var(--font-mono);">MS PowerPoint 2003 Engine v2.4</span>
+                    <div style="display: flex; gap: 10px;">
+                      <button class="exercise-submit-btn" id="btn-ppt-back" onclick="navigatePptSlide(-1)" style="background: var(--silver-gradient); border-color: #999; color: #333; text-shadow: 0 1px #fff; padding: 6px 16px; font-size: 12px; height: auto;">&lt; Back</button>
+                      <button class="exercise-submit-btn" id="btn-ppt-next" onclick="navigatePptSlide(1)" style="padding: 6px 16px; font-size: 12px; height: auto;">Next &gt;</button>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Dynamic Exercise Zone -->
-                <div class="exercise-zone" id="exercise-zone">
+                <div class="exercise-zone hidden" id="exercise-zone">
                   <!-- Exercise 1: Drag & Drop (HTML Table Slots) -->
                   <div class="exercise-panel" id="ex-drag-drop">
                     <h4>Exercise 1: Mechanical Drag and Drop</h4>

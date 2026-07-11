@@ -1701,3 +1701,128 @@ body {
 .log-query {
   color: #00ccff; /* light blue sql */
 }
+
+/* ==========================================================================
+   PowerPoint 2003 Slide Presentation Styles
+   ========================================================================== */
+.lecture-zone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.ppt-window {
+  display: flex;
+  flex: 1;
+  border: 2px solid #0053e2;
+  background: #d0e0f5;
+  border-radius: 4px;
+  overflow: hidden;
+  height: 380px;
+}
+
+.ppt-sidebar {
+  width: 170px;
+  background: #ebebeb;
+  border-right: 2px solid #99bbee;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.ppt-thumb {
+  background: #fff;
+  border: 1px solid #7799cc;
+  padding: 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  cursor: pointer;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  box-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+  transition: border-color 0.2s, background-color 0.2s;
+}
+.ppt-thumb:hover {
+  background-color: #f0f5ff;
+  border-color: #0053e2;
+}
+.ppt-thumb.active {
+  border: 2px solid #ff7f00;
+  background-color: #fffae6;
+}
+
+.ppt-thumb-num {
+  font-weight: bold;
+  color: #0053e2;
+}
+
+.ppt-slide-area {
+  flex: 1;
+  padding: 20px;
+  background: #555555; /* PowerPoint slide workspace */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.ppt-slide {
+  width: 480px;
+  height: 320px;
+  background: #ffffff;
+  border: 1px solid #000;
+  box-shadow: 8px 8px 24px rgba(0,0,0,0.6);
+  display: flex;
+  flex-direction: column;
+  padding: 30px;
+  box-sizing: border-box;
+  position: relative;
+  border-radius: 2px;
+}
+
+.ppt-slide-header {
+  font-size: 16px;
+  font-weight: bold;
+  color: #0053e2;
+  border-bottom: 2px solid #ff7f00;
+  padding-bottom: 8px;
+  margin-bottom: 20px;
+  font-family: var(--font-sans);
+}
+
+.ppt-slide-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.ppt-slide-footer {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  font-size: 9px;
+  color: #888;
+  font-family: var(--font-mono);
+}
+
+.vocab-term {
+  font-size: 26px;
+  font-weight: bold;
+  color: #0053e2;
+}
+
+.listen-btn {
+  background: var(--blue-btn-gradient);
+  border-color: var(--xp-blue-border);
+  color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.listen-btn:hover {
+  filter: brightness(1.15);
+}
