@@ -14,10 +14,19 @@ class RetroAudioEngine {
 
   init() {
     if (!this.ctx) {
-      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      try {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        logToConsole(`[SYSTEM] Created new AudioContext successfully. State: "${this.ctx.state}".`);
+      } catch (e) {
+        logToConsole(`[SYSTEM ERROR] Failed to create AudioContext: ${e.message}`, 'error');
+      }
     }
     if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume();
+      this.ctx.resume().then(() => {
+        logToConsole(`[SYSTEM] AudioContext resumed. State: "${this.ctx.state}".`);
+      }).catch(err => {
+        logToConsole(`[SYSTEM WARNING] AudioContext resume failed: ${err.message}`, 'warning');
+      });
       
       // Play a microscopic silent buffer to force-unlock Safari/iOS Web Audio
       try {
@@ -314,10 +323,16 @@ window.addEventListener('unhandledrejection', (e) => {
 // Resume context and register key down for booting
 window.addEventListener('click', () => {
   audio.init();
+  if (audio.ctx) {
+    logToConsole(`[SYSTEM GESTURE] Click recorded. AudioContext state = "${audio.ctx.state}".`);
+  }
 });
 window.addEventListener('keydown', () => {
   audio.init();
-});;
+  if (audio.ctx) {
+    logToConsole(`[SYSTEM GESTURE] Keydown recorded. AudioContext state = "${audio.ctx.state}".`);
+  }
+});
 
 
 // ==========================================================================
