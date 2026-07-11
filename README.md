@@ -14,10 +14,10 @@ To run the application locally:
    ```bash
    cd /Users/rtsws/Documents/Github/rift-raiders
    ```
-2. **Start a local web server**:
-   Since the app loads assets (images, scripts, styles) and uses browser-native APIs, it must be served over HTTP rather than opened as a local file (`file://`). You can run the built-in python web server:
+2. **Start the Backend Server**:
+   Since the app runs on a Python/Node.js API handler to manage unified payload routing and CORS settings, launch the custom Python server:
    ```bash
-   python3 -m http.server 8000
+   python3 server.py
    ```
 3. **Open in Browser**:
    Navigate to the local address in your web browser:
@@ -47,6 +47,61 @@ To run the application locally:
 ### 4. Aero Brutalist Aesthetics & Custom Wallpaper
 - Fuses animated, glossy windows (Frutinger Aero) with heavy solid outlines, blocky offsets, and monospace typography (Techno Brutalism).
 - Includes floating animated glass bubbles and a **cybernetic metallic spike wallpaper** (`wallpaper.png`) in the background of the monitor.
+
+## 🤖 AI Orchestrator & Local LLM Setup
+
+The desktop mascot widget (Duo) utilizes a hybrid AI orchestrator to generate dynamic, passive-aggressive reminders and guilt-trips. You can configure it to run on one of three engines:
+1. **Local Inference**: Runs a local LLM via Ollama on port `11434`.
+2. **Cloud Gemini**: Connects to Google GenAI endpoints (uses API key).
+3. **Cloud OpenAI**: Connects to OpenAI Chat Completions (uses API key).
+
+### ⚙️ Setting Up API Credentials (.env)
+To use Cloud engines (Gemini/OpenAI), copy your credentials into the `.env` file in the project root:
+```env
+GEMINI_API_KEY=your_gemini_key_here
+OPENAI_API_KEY=your_openai_key_here
+```
+*Note: You can also update these directly in the UI settings window, which automatically saves them to the `.env` file!*
+
+---
+
+### 🖥️ Local Ollama Setup (Free, Offline)
+
+To run inference completely locally without paying for API keys, follow these instructions:
+
+#### 🍎 macOS (Homebrew or direct installer)
+1. **Install Ollama**:
+   Using Homebrew:
+   ```bash
+   brew install ollama
+   ```
+   Or download the macOS App installer from [ollama.com/download](https://ollama.com/download).
+2. **Start the Ollama daemon**:
+   ```bash
+   ollama serve
+   ```
+   *(If you downloaded the desktop app, simply launching the app will start the background daemon).*
+3. **Download Llama 3**:
+   ```bash
+   ollama run llama3:8b
+   ```
+4. Once downloaded, you can close the terminal. The project's backend server auto-detects model tags like `llama3:8b` and communicates with the daemon on `http://localhost:11434`.
+
+#### 🪟 Windows (Direct Installer)
+1. **Download & Install**:
+   Download the installer from [ollama.com/download](https://ollama.com/download) and run the installer executable.
+2. **Run Llama 3**:
+   Open Command Prompt (`cmd`) or PowerShell, and run:
+   ```cmd
+   ollama run llama3:8b
+   ```
+3. Once the download completes and the prompt appears, you can exit the terminal.
+
+#### 🔧 Project Configuration
+1. Start the project's backend server: `python3 server.py`.
+2. In the booted desktop, click on the **AI Settings** menu item in the menubar.
+3. Select **Local Inference (Ollama / Llama.cpp)** as the hybrid mode.
+4. Click **OK** to apply. Drag Duo wherever you want, and click the floating mascot to test!
 
 ---
 

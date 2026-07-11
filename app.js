@@ -288,6 +288,30 @@ class RetroAudioEngine {
       this.playCorrect();
     }
   }
+
+  // Typewriter keyboard sound effect synthesis
+  playTypewriterSound() {
+    this.init();
+    if (!this.ctx || this.ctx.state === 'suspended') return;
+    
+    // Only play if enabled
+    if (localStorage.getItem('enable_typewriter_sound') === 'false') return;
+    
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1400 + Math.random() * 300, now);
+    
+    gain.gain.setValueAtTime(0.015, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.02);
+    
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.02);
+  }
 }
 
 const audio = new RetroAudioEngine();
@@ -564,6 +588,8 @@ function startSystemBoot() {
     
     openHobbyWizard();
     startBuddyMessengerSimulation();
+    startDuoGuiltTripSimulation();
+    initDraggableMascot();
   }, 3500);
 }
 
@@ -2245,4 +2271,324 @@ function hideToaster() {
   if (toaster) {
     toaster.classList.remove('show');
   }
+}
+
+// ==========================================================================
+// 10. AI Settings Properties Pane & Guilt-Trip Agent Logic
+// ==========================================================================
+
+function switchPropTab(tabName) {
+  const tabs = ['engine', 'keys'];
+  tabs.forEach(t => {
+    const tabEl = document.getElementById(`prop-tab-${t}`);
+    const panelEl = document.getElementById(`prop-panel-${t}`);
+    if (t === tabName) {
+      tabEl.classList.add('active');
+      tabEl.style.background = '#fff';
+      tabEl.style.fontWeight = 'bold';
+      panelEl.style.display = 'flex';
+    } else {
+      tabEl.classList.remove('active');
+      tabEl.style.background = '#e0e0e0';
+      tabEl.style.fontWeight = 'normal';
+      panelEl.style.display = 'none';
+    }
+  });
+  audio.playHddClick();
+}
+
+function openSettingsWizard() {
+  audio.playHddClick();
+  fetch('/api/settings')
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('settings-gemini-key').value = data.gemini_key || '';
+      document.getElementById('settings-openai-key').value = data.openai_key || '';
+      document.getElementById('settings-ollama-url').value = data.ollama_url || 'http://localhost:11434';
+      
+      const engineRadios = document.getElementsByName('engine-select');
+      engineRadios.forEach(radio => {
+        if (radio.value === data.engine) {
+          radio.checked = true;
+        }
+      });
+      
+      document.getElementById('settings-fallback-checkbox').checked = data.fallback_to_local;
+      document.getElementById('settings-sound-checkbox').checked = localStorage.getItem('enable_typewriter_sound') !== 'false';
+      
+      document.getElementById('settings-wizard-overlay').classList.remove('hidden');
+    })
+    .catch(err => {
+      logToConsole(`[SYSTEM ERROR] Failed to fetch settings: ${err.message}`, 'error');
+      // Fallback
+      const fallbackData = JSON.parse(localStorage.getItem('ai_settings') || '{}');
+      document.getElementById('settings-gemini-key').value = fallbackData.gemini_key || '';
+      document.getElementById('settings-openai-key').value = fallbackData.openai_key || '';
+      document.getElementById('settings-ollama-url').value = fallbackData.ollama_url || 'http://localhost:11434';
+      document.getElementById('settings-fallback-checkbox').checked = fallbackData.fallback_to_local !== false;
+      document.getElementById('settings-sound-checkbox').checked = localStorage.getItem('enable_typewriter_sound') !== 'false';
+      
+      const engineRadios = document.getElementsByName('engine-select');
+      engineRadios.forEach(radio => {
+        if (radio.value === (fallbackData.engine || 'local_inference')) {
+          radio.checked = true;
+        }
+      });
+      
+      document.getElementById('settings-wizard-overlay').classList.remove('hidden');
+    });
+}
+
+function closeSettingsWizard() {
+  audio.playHddClick();
+  document.getElementById('settings-wizard-overlay').classList.add('hidden');
+}
+
+function saveSettingsWizard() {
+  audio.playHddClick();
+  
+  const selectedEngine = document.querySelector('input[name="engine-select"]:checked').value;
+  const fallbackToLocal = document.getElementById('settings-fallback-checkbox').checked;
+  const soundEnabled = document.getElementById('settings-sound-checkbox').checked;
+  const geminiKey = document.getElementById('settings-gemini-key').value;
+  const openaiKey = document.getElementById('settings-openai-key').value;
+  const ollamaUrl = document.getElementById('settings-ollama-url').value;
+  
+  localStorage.setItem('enable_typewriter_sound', soundEnabled ? 'true' : 'false');
+  
+  const payload = {
+    engine: selectedEngine,
+    fallback_to_local: fallbackToLocal,
+    gemini_key: geminiKey,
+    openai_key: openaiKey,
+    ollama_url: ollamaUrl
+  };
+  
+  localStorage.setItem('ai_settings', JSON.stringify(payload));
+  
+  fetch('/api/settings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+    .then(res => res.json())
+    .then(data => {
+      logToConsole(`[PHP] config.inc.php: Settings written to environment .env.`, 'info');
+      alert("Settings saved successfully.");
+      document.getElementById('settings-wizard-overlay').classList.add('hidden');
+    })
+    .catch(err => {
+      logToConsole(`[SYSTEM WARNING] Failed to save settings to server: ${err.message}. LocalStorage fallback used.`, 'warning');
+      alert("Settings saved locally.");
+      document.getElementById('settings-wizard-overlay').classList.add('hidden');
+    });
+}
+
+let isDuoSpeaking = false;
+function triggerManualGuiltTrip() {
+  if (isDuoSpeaking) return;
+  
+  audio.init();
+  audio.playHddClick();
+  
+  const bubble = document.getElementById('floating-duo-bubble');
+  const textEl = document.getElementById('floating-duo-bubble-text');
+  const avatar = document.getElementById('floating-duo-img');
+  
+  isDuoSpeaking = true;
+  bubble.style.display = 'block';
+  textEl.innerHTML = '';
+  
+  avatar.classList.remove('speaking-flap');
+  avatar.classList.add('thinking-nod');
+  logToConsole(`[PHP] guilt_trip_agent: Parsing metrics. Querying chosen LLM backend...`, 'info');
+  
+  const youRow = db.bbs_leaderboard.find(x => x.user.includes("You"));
+  const xpValue = youRow ? youRow.xp : 120;
+  
+  const statePayload = {
+    streak: db.users.streak,
+    xp: xpValue,
+    hour: new Date().getHours(),
+    hobby: db.users.hobby || 'golf',
+    lingots: db.users.lingots
+  };
+  
+  fetch('/api/guilt-trip', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(statePayload)
+  })
+    .then(response => {
+      avatar.classList.remove('thinking-nod');
+      avatar.classList.add('speaking-flap');
+      
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      
+      function readStream() {
+        reader.read().then(({ done, value }) => {
+          if (done) {
+            avatar.classList.remove('speaking-flap');
+            isDuoSpeaking = false;
+            logToConsole(`[PHP] guilt_trip_agent: Raw stream complete.`);
+            return;
+          }
+          
+          buffer += decoder.decode(value);
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+          
+          for (const line of lines) {
+            const cleanLine = line.trim();
+            if (cleanLine.startsWith('data:')) {
+              try {
+                const jsonStr = cleanLine.substring(5).trim();
+                const parsed = JSON.parse(jsonStr);
+                
+                if (parsed.error) {
+                  textEl.innerHTML = `<span style="color:#ff3333; font-weight:bold;">[ERROR] ${parsed.error}</span>`;
+                  avatar.classList.remove('speaking-flap');
+                  isDuoSpeaking = false;
+                  return;
+                }
+                
+                if (parsed.text) {
+                  if (parsed.text.startsWith('[SYSTEM WARNING]')) {
+                    logToConsole(parsed.text.trim(), 'warning');
+                  } else {
+                    typewriteText(parsed.text, textEl);
+                  }
+                }
+              } catch (e) {
+                console.error("SSE parse error", e);
+              }
+            }
+          }
+          readStream();
+        });
+      }
+      readStream();
+    })
+    .catch(err => {
+      avatar.classList.remove('thinking-nod');
+      avatar.classList.remove('speaking-flap');
+      isDuoSpeaking = false;
+      logToConsole(`[SYSTEM ERROR] Guilt trip backend request failed: ${err.message}`, 'error');
+      textEl.innerHTML = `<span style="color:#ff3333; font-weight:bold;">Connection failure. Cannot establish network handshake with Duo. OMFG plz run server.py!</span>`;
+    });
+}
+
+let typewriterQueue = [];
+let typewriterInterval = null;
+
+function typewriteText(text, targetEl) {
+  for (const char of text) {
+    typewriterQueue.push(char);
+  }
+  
+  if (!typewriterInterval) {
+    typewriterInterval = setInterval(() => {
+      if (typewriterQueue.length === 0) {
+        clearInterval(typewriterInterval);
+        typewriterInterval = null;
+        return;
+      }
+      
+      const char = typewriterQueue.shift();
+      if (char === '\n') {
+        targetEl.innerHTML += '<br>';
+      } else {
+        targetEl.innerHTML += char;
+      }
+      audio.playTypewriterSound();
+    }, 30);
+  }
+}
+
+function startDuoGuiltTripSimulation() {
+  setTimeout(() => {
+    triggerManualGuiltTrip();
+  }, 10000);
+  
+  setInterval(() => {
+    const isLessonActive = !document.getElementById('lesson-overlay').classList.contains('hidden');
+    if (!isLessonActive && !isDuoSpeaking) {
+      logToConsole(`[PHP] Passive-aggressive trigger: Duo is checking user activity...`);
+      triggerManualGuiltTrip();
+    }
+  }, 75000);
+}
+
+function initDraggableMascot() {
+  const widget = document.getElementById('floating-duo-widget');
+  const avatar = widget.querySelector('.floating-avatar-container');
+  const desktop = document.getElementById('desktop');
+  
+  let isDragging = false;
+  let startX = 0;
+  let startY = 0;
+  let offsetX = 0;
+  let offsetY = 0;
+  let hasMoved = false;
+  
+  avatar.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    hasMoved = false;
+    
+    startX = e.clientX;
+    startY = e.clientY;
+    
+    const rect = widget.getBoundingClientRect();
+    const desktopRect = desktop.getBoundingClientRect();
+    
+    widget.style.bottom = 'auto';
+    widget.style.right = 'auto';
+    widget.style.left = `${rect.left - desktopRect.left}px`;
+    widget.style.top = `${rect.top - desktopRect.top}px`;
+    
+    offsetX = e.clientX - parseInt(widget.style.left);
+    offsetY = e.clientY - parseInt(widget.style.top);
+    
+    audio.playHddClick();
+    
+    e.preventDefault();
+  });
+  
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    if (Math.hypot(dx, dy) > 5) {
+      hasMoved = true;
+    }
+    
+    let newLeft = e.clientX - offsetX;
+    let newTop = e.clientY - offsetY;
+    
+    const desktopRect = desktop.getBoundingClientRect();
+    const widgetRect = widget.getBoundingClientRect();
+    
+    const maxLeft = desktopRect.width - widgetRect.width;
+    const maxTop = desktopRect.height - widgetRect.height;
+    
+    if (newLeft < 0) newLeft = 0;
+    if (newLeft > maxLeft) newLeft = maxLeft;
+    if (newTop < 0) newTop = 0;
+    if (newTop > maxTop) newTop = maxTop;
+    
+    widget.style.left = `${newLeft}px`;
+    widget.style.top = `${newTop}px`;
+  });
+  
+  document.addEventListener('mouseup', (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+    
+    if (!hasMoved) {
+      triggerManualGuiltTrip();
+    }
+  });
 }

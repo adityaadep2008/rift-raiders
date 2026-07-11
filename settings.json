@@ -1,0 +1,5 @@
+{
+  "engine": "local_inference",
+  "fallback_to_local": true,
+  "ollama_url": "http://localhost:11434"
+}
