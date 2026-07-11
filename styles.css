@@ -1826,3 +1826,203 @@ body {
 .listen-btn:hover {
   filter: brightness(1.15);
 }
+
+/* ==========================================================================
+   Frutinger Aero & Techno Brutalism (Aero Brutalism Design Overrides)
+   ========================================================================== */
+
+/* Animated Aurora Background */
+.desktop-shell {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(-45deg, #00b4d8, #0077b6, #00f5d4, #70e000, #38b000);
+  background-size: 400% 400%;
+  animation: aurora-flow 18s infinite alternate ease-in-out;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+@keyframes aurora-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Animated Floating Aero Bubbles */
+.bubble-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  top: 0; left: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.bubble {
+  position: absolute;
+  bottom: -70px;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.2) 40%, rgba(0,180,216,0.3) 60%, rgba(255,255,255,0.5) 100%);
+  border: 1.5px solid rgba(255,255,255,0.7);
+  border-radius: 50%;
+  box-shadow: inset -3px -3px 8px rgba(0,0,0,0.1), 0 6px 12px rgba(0,180,216,0.2);
+  animation: float-up 12s infinite ease-in-out;
+}
+
+@keyframes float-up {
+  0% { transform: translateY(0) translateX(0) scale(0.7); opacity: 0; }
+  10% { opacity: 0.9; }
+  90% { opacity: 0.9; }
+  100% { transform: translateY(-840px) translateX(60px) scale(1.3); opacity: 0; }
+}
+
+/* Neubrutalist Shadows & Borders for Window Shells */
+.aero-window, .lesson-window {
+  border: 3.5px solid #000 !important;
+  box-shadow: 10px 10px 0px #000 !important;
+  border-radius: 0px !important; /* Flat stark brutalism */
+}
+
+/* Glossy Aero Window Titlebars */
+.window-titlebar {
+  background: linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.3) 50%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.08) 100%) !important;
+  border-bottom: 3px solid #000 !important;
+  height: 34px !important;
+}
+
+/* Sharp beveled brutalist buttons */
+.exercise-submit-btn, .shop-buy-btn, .flash-btn, .start-btn, .winamp-btn {
+  border: 2.5px solid #000 !important;
+  box-shadow: 3.5px 3.5px 0px #000 !important;
+  border-radius: 0px !important;
+  text-shadow: none !important;
+  font-family: var(--font-sans) !important;
+  font-weight: 900 !important;
+  text-transform: uppercase;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.exercise-submit-btn:active, .shop-buy-btn:active, .flash-btn:active, .start-btn:active, .winamp-btn:active {
+  transform: translate(2.5px, 2.5px) !important;
+  box-shadow: 1px 1px 0px #000 !important;
+}
+
+/* Word blocks with brutalist borders & glossy gradients */
+.word-block {
+  border: 2.5px solid #000 !important;
+  box-shadow: 3px 3px 0px #000 !important;
+  border-radius: 0px !important;
+  font-family: var(--font-mono) !important;
+  font-size: 12px !important;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+.word-block:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 1px 1px 0px #000 !important;
+}
+
+/* PowerPoint Slide deck frame */
+.ppt-slide {
+  border: 3.5px solid #000 !important;
+  box-shadow: 8px 8px 0px #000 !important;
+  border-radius: 0px !important;
+}
+
+.ppt-sidebar {
+  border-right: 3px solid #000 !important;
+  background: #f7f9fc !important;
+}
+
+.ppt-thumb {
+  border: 1.5px solid #000 !important;
+  box-shadow: 2px 2px 0px #000 !important;
+  border-radius: 0px !important;
+}
+.ppt-thumb.active {
+  border: 2.5px solid #ff7f00 !important;
+  box-shadow: 2px 2px 0px #000 !important;
+}
+
+/* Brutalist Leaderboard */
+.bbs-table {
+  border: 3px solid #000 !important;
+}
+.bbs-table th, .bbs-table td {
+  border: 2.5px solid #000 !important;
+  font-family: var(--font-mono) !important;
+  font-weight: bold !important;
+}
+.bbs-table th {
+  background: #00f5d4 !important; /* Electric Cyan */
+  color: #000 !important;
+  text-shadow: none !important;
+}
+
+/* BBS banner neon gradient */
+.bbs-banner {
+  background: linear-gradient(90deg, #70e000, #0077b6) !important;
+  border: 3px solid #000 !important;
+  box-shadow: 5px 5px 0px #000 !important;
+  border-radius: 0px !important;
+}
+.bbs-banner h2, .bbs-banner p {
+  color: #000 !important;
+  text-shadow: none !important;
+}
+
+/* Winamp brutalist overrides */
+.winamp-player {
+  border: 3.5px solid #000 !important;
+  box-shadow: 5px 5px 0px #000 !important;
+  border-radius: 0px !important;
+}
+
+/* MSN Toaster */
+.msn-toaster {
+  border: 3px solid #000 !important;
+  box-shadow: -6px -6px 0px #000 !important;
+  border-radius: 0px !important;
+}
+.toaster-header {
+  border-bottom: 2.5px solid #000 !important;
+}
+
+/* Tray & Taskbar */
+.system-taskbar {
+  border-top: 3px solid #000 !important;
+  background: linear-gradient(180deg, #333 0%, #151515 100%) !important;
+}
+.start-btn {
+  border-radius: 0px 8px 8px 0px !important;
+  border: 2px solid #000 !important;
+  box-shadow: 2px 2px 0px #000 !important;
+}
+.taskbar-tab {
+  border: 2px solid #000 !important;
+  box-shadow: 2px 2px 0px #000 !important;
+  border-radius: 0px !important;
+}
+
+/* Console logs drawer */
+.server-logs-drawer {
+  border-top: 4px solid #000 !important;
+}
+.console-header {
+  border-bottom: 2.5px solid #000 !important;
+}
+
+/* Skill Tree Glass Spheres */
+.node-sphere {
+  border: 2.5px solid #000 !important;
+  box-shadow: 
+    inset 0 12px 12px rgba(255,255,255,0.7),
+    inset 0 -8px 10px rgba(0,0,0,0.15),
+    3px 3px 0px #000 !important;
+}
+
+.tree-connector-row .connector-line {
+  background: #000 !important;
+  width: 6px !important;
+}
+
