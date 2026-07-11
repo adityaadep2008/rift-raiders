@@ -5,6 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DuoLingo 2006 Edition - Retro Reboot</title>
   <link rel="stylesheet" href="styles.css">
+  <script>
+    window.addEventListener('error', function(e) {
+      var div = document.createElement('div');
+      div.className = 'js-debug-error-banner';
+      div.style.position = 'absolute';
+      div.style.top = '0';
+      div.style.left = '0';
+      div.style.width = '100%';
+      div.style.background = '#ff0055';
+      div.style.color = '#fff';
+      div.style.fontFamily = 'monospace';
+      div.style.fontSize = '12px';
+      div.style.fontWeight = 'bold';
+      div.style.zIndex = '99999';
+      div.style.padding = '8px';
+      div.style.borderBottom = '3px solid #000';
+      div.innerText = '⚠️ RUNTIME EXCEPTION: ' + e.message + ' (' + e.filename + ':' + e.lineno + ')';
+      document.body.appendChild(div);
+    });
+  </script>
   <!-- Retro fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

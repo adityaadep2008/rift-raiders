@@ -1831,22 +1831,15 @@ body {
    Frutinger Aero & Techno Brutalism (Aero Brutalism Design Overrides)
    ========================================================================== */
 
-/* Animated Aurora Background */
+/* Custom Cyber-Brutalist Metal Background */
 .desktop-shell {
   width: 100%;
   height: 100%;
-  background: linear-gradient(-45deg, #00b4d8, #0077b6, #00f5d4, #70e000, #38b000);
-  background-size: 400% 400%;
-  animation: aurora-flow 18s infinite alternate ease-in-out;
+  background: url('wallpaper.jpg') no-repeat center center;
+  background-size: cover;
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
-}
-
-@keyframes aurora-flow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
 }
 
 /* Animated Floating Aero Bubbles */

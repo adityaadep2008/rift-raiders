@@ -9,6 +9,7 @@
 class RetroAudioEngine {
   constructor() {
     this.ctx = null;
+    this.bgMusicRunning = false;
   }
 
   init() {
@@ -17,7 +18,108 @@ class RetroAudioEngine {
     }
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume();
+      
+      // Play a microscopic silent buffer to force-unlock Safari/iOS Web Audio
+      try {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.00001, this.ctx.currentTime);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(0);
+        osc.stop(0.001);
+      } catch (err) {
+        console.warn("Safari AudioContext unlock note failed:", err);
+      }
     }
+  }
+
+  // Synthesized Frutinger Aero Nature Background Music (pads & bird chirps)
+  playBackgroundMusic() {
+    this.init();
+    if (!this.ctx) return;
+    
+    if (this.bgMusicRunning) return;
+    this.bgMusicRunning = true;
+    
+    // Soft Ambient Pad progression chord player
+    const playChord = (freqs, duration) => {
+      const now = this.ctx.currentTime;
+      const gainNode = this.ctx.createGain();
+      gainNode.gain.setValueAtTime(0, now);
+      gainNode.gain.linearRampToValueAtTime(0.04, now + 2.0); // soft volume pad
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      
+      freqs.forEach(freq => {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'triangle'; // smooth retro pad tone
+        osc.frequency.setValueAtTime(freq, now);
+        osc.connect(gainNode);
+        osc.start(now);
+        osc.stop(now + duration);
+      });
+      
+      gainNode.connect(this.ctx.destination);
+    };
+    
+    // Bird chirp synthesizer loop
+    const playBirdChirp = () => {
+      if (!this.bgMusicRunning || !this.ctx || this.ctx.state === 'suspended') return;
+      const now = this.ctx.currentTime;
+      
+      // Multi-chirp burst
+      const numChirps = Math.floor(Math.random() * 3) + 2;
+      const startTime = now;
+      
+      for (let i = 0; i < numChirps; i++) {
+        const chirpDelay = i * 0.15;
+        const osc = this.ctx.createOscillator();
+        const gainNode = this.ctx.createGain();
+        
+        osc.type = 'sine';
+        
+        const startFreq = 2900 + Math.random() * 300;
+        const endFreq = 3900 + Math.random() * 300;
+        osc.frequency.setValueAtTime(startFreq, startTime + chirpDelay);
+        osc.frequency.exponentialRampToValueAtTime(endFreq, startTime + chirpDelay + 0.08);
+        
+        gainNode.gain.setValueAtTime(0, startTime + chirpDelay);
+        gainNode.gain.linearRampToValueAtTime(0.015, startTime + chirpDelay + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + chirpDelay + 0.08);
+        
+        osc.connect(gainNode);
+        gainNode.connect(this.ctx.destination);
+        
+        osc.start(startTime + chirpDelay);
+        osc.stop(startTime + chirpDelay + 0.08);
+      }
+      
+      // schedule next chirp sweep in 9-16s
+      setTimeout(playBirdChirp, (9 + Math.random() * 7) * 1000);
+    };
+    
+    // Ambient chords progression: Cmaj9 -> Fmaj9
+    const chords = [
+      [261.63, 329.63, 392.00, 493.88, 587.33], // Cmaj9
+      [349.23, 440.00, 523.25, 659.25, 783.99]  // Fmaj9
+    ];
+    let chordIndex = 0;
+    
+    const runChordLoop = () => {
+      if (!this.bgMusicRunning || !this.ctx || this.ctx.state === 'suspended') return;
+      playChord(chords[chordIndex], 8.0);
+      chordIndex = (chordIndex + 1) % chords.length;
+      setTimeout(runChordLoop, 8000);
+    };
+    
+    runChordLoop();
+    setTimeout(playBirdChirp, 1500);
+    logToConsole(`[PHP] audio_bg_music: Background bird ambient loop synthesized.`, 'info');
+  }
+
+  stopBackgroundMusic() {
+    this.bgMusicRunning = false;
+    logToConsole(`[PHP] audio_bg_music: Background music stopped.`, 'info');
   }
 
   // Windows Vista/XP inspired Startup Chime
@@ -26,7 +128,6 @@ class RetroAudioEngine {
     if (!this.ctx) return;
     const now = this.ctx.currentTime;
     
-    // Vista Startup Chord: Eb major add9 / Ab major vibe
     const notes = [220, 330, 440, 554, 659, 880]; 
     notes.forEach((freq, index) => {
       const osc = this.ctx.createOscillator();
@@ -87,7 +188,6 @@ class RetroAudioEngine {
     if (!this.ctx) return;
     const now = this.ctx.currentTime;
     
-    // Note 1
     const osc1 = this.ctx.createOscillator();
     const gain1 = this.ctx.createGain();
     osc1.frequency.setValueAtTime(523.25, now); // C5
@@ -98,7 +198,6 @@ class RetroAudioEngine {
     osc1.start(now);
     osc1.stop(now + 0.3);
     
-    // Note 2 (delayed)
     const osc2 = this.ctx.createOscillator();
     const gain2 = this.ctx.createGain();
     osc2.frequency.setValueAtTime(659.25, now + 0.12); // E5
@@ -120,8 +219,8 @@ class RetroAudioEngine {
     const gain = this.ctx.createGain();
     
     osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(130.81, now); // C3 (low and buzz-like)
-    osc.frequency.linearRampToValueAtTime(110.00, now + 0.4); // Slide down
+    osc.frequency.setValueAtTime(130.81, now); // C3
+    osc.frequency.linearRampToValueAtTime(110.00, now + 0.4);
     
     gain.gain.setValueAtTime(0.25, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
@@ -172,7 +271,7 @@ class RetroAudioEngine {
     
     osc.type = 'sine';
     osc.frequency.setValueAtTime(580, now);
-    osc.frequency.exponentialRampToValueAtTime(160, now + 0.09); // drop pitch
+    osc.frequency.exponentialRampToValueAtTime(160, now + 0.09);
     
     gain.gain.setValueAtTime(0.15, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
@@ -186,17 +285,12 @@ class RetroAudioEngine {
   // Sequential, robust speech synthesis using native Web Speech API (Spanish voices)
   playRoboticSpeech(phrase) {
     if ('speechSynthesis' in window) {
-      // Cancel any active speech utterance
       window.speechSynthesis.cancel();
       
       const utterance = new SpeechSynthesisUtterance(phrase);
-      
-      // Select Spanish language
       utterance.lang = 'es-ES';
-      
-      // Clunky retro computer assistant tuning
-      utterance.pitch = 0.85; // lower pitch
-      utterance.rate = 0.8;  // slower rate
+      utterance.pitch = 0.85;
+      utterance.rate = 0.8;
       
       window.speechSynthesis.speak(utterance);
       logToConsole(`[PHP] Native SpeechSynthesis: Speaking "${phrase}" in Spanish.`);
@@ -426,6 +520,7 @@ function startSystemBoot() {
   
   setTimeout(() => {
     audio.playStartup();
+    audio.playBackgroundMusic(); // Start synthesized background music and bird chirps loop
     
     document.getElementById('boot-screen').classList.add('hidden');
     document.getElementById('desktop').classList.remove('hidden');
@@ -489,6 +584,7 @@ function initDraggableWindow() {
 }
 
 function openDuoApp() {
+  audio.init();
   const win = document.getElementById('duo-window');
   win.classList.remove('hidden');
   win.classList.add('window-active');
@@ -502,6 +598,7 @@ function minimizeWindow() {
 }
 
 function toggleMaximizeWindow() {
+  audio.init();
   const win = document.getElementById('duo-window');
   if (win.style.width === '100%') {
     win.style.width = '820px';
@@ -522,6 +619,7 @@ function closeWindow() {
 }
 
 function toggleServerLogs() {
+  audio.init();
   const drawer = document.getElementById('server-logs-drawer');
   drawer.classList.toggle('hidden');
   audio.playHddClick();
@@ -529,6 +627,7 @@ function toggleServerLogs() {
 
 // Switch tabs inside Duo App
 function switchTab(tabId) {
+  audio.init();
   runQuery(`SELECT * FROM bbs_posts JOIN user_profiles JOIN course_progress WHERE tab='${tabId}';`, () => {
     const tabs = ['tab-tree', 'tab-bbs', 'tab-shop'];
     tabs.forEach(t => {
@@ -1062,6 +1161,7 @@ function generateDynamicExercises(lessonId) {
 }
 
 function startLesson(lessonId) {
+  audio.init();
   runQuery(`SELECT * FROM exercises WHERE module_id='${lessonId}' ORDER BY difficulty ASC;`, () => {
     currentLessonId = lessonId;
     currentExerciseIndex = 0;
