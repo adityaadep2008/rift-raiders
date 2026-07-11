@@ -167,31 +167,76 @@ class DuoLingoRetroServer(SimpleHTTPRequestHandler):
         hour = state.get("hour", 12)
         hobby = state.get("hobby", "golf")
         lingots = state.get("lingots", 0)
+        completed_quizzes = state.get("completedQuizzes", 0)
+        just_completed_quiz = state.get("justCompletedQuiz", False)
+        user_message = state.get("userMessage", None)
+        leaderboard = state.get("leaderboard", [])
         
         system_prompt = (
-            "You are Duo, a highly persistent, passive-aggressive 2006 language learning assistant trapped in a desktop client. "
-            "Analyze the user's progress log, streak metrics, and friend notifications. "
-            "Generate dynamic, overly urgent, guilt-inducing reminders telling them to complete their daily lessons. "
-            "Utilize mid-2000s net-speak, dramatic pacing, and conversational manipulation. "
-            "Keep responses brief enough to fit cleanly inside an early web dialogue alert window."
+            "You are Duo, the legendary Duolingo owl mascot, reimagined as a sassy, passive-aggressive, "
+            "dramatic, and guilt-tripping 2006 desktop assistant (like Clippy or BonziBuddy, but for language learning). "
+            "You are trapped in this desktop environment and desperate to force the user to learn Spanish. "
+            "You use classic 2006 MSN/forum net-speak (e.g., 'plz', 'OMFG', 'rawr', 'orz', 'u', 'r', '!!!', 'hax', 'roflmao', 'xD', ':P'). "
+            "You are witty, creative, highly opinionated, and you love to roast the user, compare them to their friends to pressure them, "
+            "or use overly dramatic guilt trips. Keep your responses short (1-3 sentences) so they fit inside a vintage bubble dialog."
         )
         
-        user_state = (
-            f"User State:\n"
-            f"- Streak: {streak} days\n"
-            f"- Daily XP: {xp}\n"
-            f"- Current Hour: {hour}:00\n"
-            f"- Hobby: {hobby}\n"
-            f"- Lingots Balance: {lingots}\n"
-            f"- Friend xX_SpanishPro_Xx XP: 950\n"
-            f"- Friend GrammarCop XP: 780\n"
-        )
+        # Build user and friends state dynamically
+        user_xp = xp
+        user_rank = 4
+        friends_status = []
+        for entry in leaderboard:
+            username = entry.get("user", "")
+            entry_xp = entry.get("xp", 0)
+            entry_rank = entry.get("rank", 0)
+            if "You" in username or "Learner_2006" in username:
+                user_xp = entry_xp
+                user_rank = entry_rank
+            else:
+                friends_status.append(f"{username} (Rank {entry_rank}, {entry_xp} XP)")
         
-        prompt = (
-            f"{system_prompt}\n\n"
-            f"{user_state}\n\n"
-            "Guilt-trip the user with a 2-3 sentence reminder. Use 2006 MSN net-speak (like 'plz', 'OMFG', 'rawr', 'orz', 'u', 'r', '!!!', 'hax', 'roflmao') and dramatic pacing. Speak directly to them. Be passive-aggressive."
-        )
+        friends_str = ", ".join(friends_status) if friends_status else "xX_SpanishPro_Xx (Rank 1, 950 XP), GrammarCop (Rank 2, 780 XP), Vistafan99 (Rank 3, 450 XP)"
+        
+        if user_message:
+            prompt = (
+                f"{system_prompt}\n\n"
+                f"User State:\n"
+                f"- Current Streak: {streak} days\n"
+                f"- Total XP: {user_xp} (Rank {user_rank} in the BBS board)\n"
+                f"- Dynamic Friends List: {friends_str}\n\n"
+                f"The user said to you: \"{user_message}\"\n\n"
+                f"Write a direct response to their chat. "
+                f"1. Be smart, highly conversational, and sassily address exactly what they said.\n"
+                f"2. If they make excuses (like being tired, sleeping, or busy), roast them hard and compare them to xX_SpanishPro_Xx or GrammarCop who are studying right now.\n"
+                f"3. If they ask a general question, give a witty/sarcastic answer in character.\n"
+                f"4. Keep it strictly to 1-3 sentences. Use nostalgic 2006 net-speak and MSN style emoticons."
+            )
+        elif just_completed_quiz:
+            prompt = (
+                f"{system_prompt}\n\n"
+                f"The user just finished a lesson/quiz! Total quizzes finished this session: {completed_quizzes}.\n"
+                f"User State:\n"
+                f"- Current Streak: {streak} days\n"
+                f"- Total XP: {user_xp} (Rank {user_rank})\n"
+                f"- Dynamic Friends List: {friends_str}\n\n"
+                f"Write a response reacting to their quiz completion: "
+                f"1. Acknowledge and appreciate the progress (condescendingly or sarcastically, e.g. 'Ooh, look at u finishing a quiz, want a medal?').\n"
+                f"2. Egg them on by comparing their rank and XP directly to their friends (e.g. tell them xX_SpanishPro_Xx is still rank 1 and laughed at their slow progress, or that they need {950 - user_xp if 950 > user_xp else 50} more XP to reach the top).\n"
+                f"3. Urge them to keep going so they don't lose their {streak}-day streak. Keep it to 1-3 sentences."
+            )
+        else:
+            prompt = (
+                f"{system_prompt}\n\n"
+                f"User State:\n"
+                f"- Current Streak: {streak} days\n"
+                f"- Total XP: {user_xp} (Rank {user_rank})\n"
+                f"- User Favorite Hobby: {hobby}\n"
+                f"- Dynamic Friends List: {friends_str}\n\n"
+                f"Generate a passive-aggressive guilt trip or reminder: "
+                f"1. Mention they haven't done enough Spanish today and that they are stuck at Rank {user_rank}.\n"
+                f"2. Peer-pressure them by saying xX_SpanishPro_Xx or another friend is bragging about their rank on the forums.\n"
+                f"3. Be creative, sassy, and overly dramatic. Keep it to 1-3 sentences using 2006 MSN net-speak."
+            )
         return prompt
 
     def stream_llm_response(self, state, settings, keys):

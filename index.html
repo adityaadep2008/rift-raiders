@@ -731,6 +731,10 @@
             <div class="floating-avatar-container">
               <img src="duo_bird_clippy_style.png" alt="Duo the Assistant" id="floating-duo-img" class="floating-duo-img">
             </div>
+            <div class="duo-chat-container hidden" id="duo-chat-container">
+              <input type="text" id="duo-chat-input" placeholder="Type response to Duo..." class="duo-chat-input" onkeydown="handleDuoChatKeydown(event)">
+              <button id="duo-chat-submit" class="duo-chat-submit" onclick="submitDuoChat()">Send</button>
+            </div>
           </div>
 
         </div> <!-- Desktop Shell End -->

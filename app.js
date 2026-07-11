@@ -2240,8 +2240,17 @@ function commitLessonProgress() {
     
     logToConsole(`[PHP] Learned words cache rebuilt. Total vocabulary size: ${db.users.learned_words.length} items.`);
     
-    db.bbs_leaderboard[3].xp += xp;
-    db.bbs_leaderboard[3].posts += 1;
+    const youRow = db.bbs_leaderboard.find(x => x.user.includes("You") || x.user.includes("Learner_2006"));
+    if (youRow) {
+      youRow.xp += xp;
+      youRow.posts += 1;
+    }
+    db.bbs_leaderboard.sort((a, b) => b.xp - a.xp);
+    db.bbs_leaderboard.forEach((row, i) => {
+      row.rank = i + 1;
+    });
+    
+    completedQuizzesCount += 1;
     
     updateDashboardUI();
     document.getElementById('lesson-overlay').classList.add('hidden');
@@ -2252,8 +2261,19 @@ function commitLessonProgress() {
     
     alert(`CONGRATULATIONS! Module completed. You earned +${xp} XP and +${lingotReward} Lingots!`);
     
+    // Open chat container
+    const chatContainer = document.getElementById('duo-chat-container');
+    if (chatContainer) {
+      chatContainer.classList.remove('hidden');
+      const inputEl = document.getElementById('duo-chat-input');
+      if (inputEl) {
+        inputEl.value = '';
+        inputEl.focus();
+      }
+    }
+    
     setTimeout(() => {
-      triggerManualGuiltTrip();
+      triggerManualGuiltTrip({ justCompletedQuiz: true });
     }, 1000);
   });
 }
@@ -2506,8 +2526,24 @@ function saveSettingsWizard() {
 }
 
 let isDuoSpeaking = false;
-function triggerManualGuiltTrip() {
-  if (isDuoSpeaking) return;
+let isStreamActive = false;
+let completedQuizzesCount = 0;
+
+function clearTypewriter() {
+  if (typewriterInterval) {
+    clearInterval(typewriterInterval);
+    typewriterInterval = null;
+  }
+  typewriterQueue = [];
+}
+
+function triggerManualGuiltTrip(options = {}) {
+  // If this is a background interval check, we don't interrupt active speech.
+  // Otherwise (user chat, just completed quiz, or force), we clear and speak.
+  const isBackground = !options.userMessage && !options.justCompletedQuiz && !options.force;
+  if (isBackground && isDuoSpeaking) return;
+  
+  clearTypewriter();
   
   audio.init();
   audio.playHddClick();
@@ -2525,6 +2561,7 @@ function triggerManualGuiltTrip() {
   }
   
   isDuoSpeaking = true;
+  isStreamActive = true;
   if (bubble) bubble.style.display = 'block';
   if (textEl) textEl.innerHTML = '';
   if (sidebarTextEl) sidebarTextEl.innerHTML = '';
@@ -2538,9 +2575,15 @@ function triggerManualGuiltTrip() {
     sidebarAvatar.classList.add('thinking-nod');
   }
   
+  // Disable chat inputs while speaking
+  const chatInput = document.getElementById('duo-chat-input');
+  const chatSubmit = document.getElementById('duo-chat-submit');
+  if (chatInput) chatInput.disabled = true;
+  if (chatSubmit) chatSubmit.disabled = true;
+  
   logToConsole(`[PHP] guilt_trip_agent: Parsing metrics. Querying chosen LLM backend...`, 'info');
   
-  const youRow = db.bbs_leaderboard.find(x => x.user.includes("You"));
+  const youRow = db.bbs_leaderboard.find(x => x.user.includes("You") || x.user.includes("Learner_2006"));
   const xpValue = youRow ? youRow.xp : 120;
   
   const statePayload = {
@@ -2548,7 +2591,11 @@ function triggerManualGuiltTrip() {
     xp: xpValue,
     hour: new Date().getHours(),
     hobby: db.users.hobby || 'golf',
-    lingots: db.users.lingots
+    lingots: db.users.lingots,
+    completedQuizzes: completedQuizzesCount,
+    justCompletedQuiz: !!options.justCompletedQuiz,
+    userMessage: options.userMessage || null,
+    leaderboard: db.bbs_leaderboard
   };
   
   fetch('/api/guilt-trip', {
@@ -2557,14 +2604,13 @@ function triggerManualGuiltTrip() {
     body: JSON.stringify(statePayload)
   })
     .then(response => {
-      if (avatar) {
-        avatar.classList.remove('thinking-nod');
-        avatar.classList.add('speaking-flap');
-      }
-      if (sidebarAvatar) {
-        sidebarAvatar.classList.remove('thinking-nod');
-        sidebarAvatar.classList.add('speaking-flap');
-      }
+      // Remove thinking nod immediately as stream responses start
+      if (avatar) avatar.classList.remove('thinking-nod');
+      if (sidebarAvatar) sidebarAvatar.classList.remove('thinking-nod');
+      
+      // Re-enable inputs now that request has connected and started streaming
+      if (chatInput) chatInput.disabled = false;
+      if (chatSubmit) chatSubmit.disabled = false;
       
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -2573,10 +2619,17 @@ function triggerManualGuiltTrip() {
       function readStream() {
         reader.read().then(({ done, value }) => {
           if (done) {
-            if (avatar) avatar.classList.remove('speaking-flap');
-            if (sidebarAvatar) sidebarAvatar.classList.remove('speaking-flap');
-            isDuoSpeaking = false;
+            isStreamActive = false;
             logToConsole(`[PHP] guilt_trip_agent: Raw stream complete.`);
+            // Note: isDuoSpeaking and animations are cleaned up in the typewriter finish block below
+            // in case typewriter is still catching up. If it's already caught up, we clean up now:
+            if (typewriterQueue.length === 0) {
+              if (avatar) avatar.classList.remove('speaking-flap');
+              if (sidebarAvatar) sidebarAvatar.classList.remove('speaking-flap');
+              isDuoSpeaking = false;
+              if (chatInput) chatInput.disabled = false;
+              if (chatSubmit) chatSubmit.disabled = false;
+            }
             return;
           }
           
@@ -2596,9 +2649,12 @@ function triggerManualGuiltTrip() {
                   if (textEl) textEl.innerHTML = errMsg;
                   if (sidebarTextEl) sidebarTextEl.innerHTML = errMsg;
                   
+                  isStreamActive = false;
+                  isDuoSpeaking = false;
                   if (avatar) avatar.classList.remove('speaking-flap');
                   if (sidebarAvatar) sidebarAvatar.classList.remove('speaking-flap');
-                  isDuoSpeaking = false;
+                  if (chatInput) chatInput.disabled = false;
+                  if (chatSubmit) chatSubmit.disabled = false;
                   return;
                 }
                 
@@ -2623,6 +2679,8 @@ function triggerManualGuiltTrip() {
       readStream();
     })
     .catch(err => {
+      isStreamActive = false;
+      isDuoSpeaking = false;
       if (avatar) {
         avatar.classList.remove('thinking-nod');
         avatar.classList.remove('speaking-flap');
@@ -2631,7 +2689,9 @@ function triggerManualGuiltTrip() {
         sidebarAvatar.classList.remove('thinking-nod');
         sidebarAvatar.classList.remove('speaking-flap');
       }
-      isDuoSpeaking = false;
+      if (chatInput) chatInput.disabled = false;
+      if (chatSubmit) chatSubmit.disabled = false;
+      
       logToConsole(`[SYSTEM ERROR] Guilt trip backend request failed: ${err.message}`, 'error');
       const errFail = `<span style="color:#ff3333; font-weight:bold;">Connection failure. Cannot establish network handshake with Duo. OMFG plz run server.py!</span>`;
       if (textEl) textEl.innerHTML = errFail;
@@ -2650,10 +2710,33 @@ function typewriteText(text, targetEls) {
   const targets = Array.isArray(targetEls) ? targetEls : [targetEls];
   
   if (!typewriterInterval) {
+    // Start the flap animations when typewriter starts
+    const avatar = document.getElementById('floating-duo-img');
+    const sidebarAvatar = document.getElementById('mascot-img');
+    if (avatar) {
+      avatar.classList.remove('thinking-nod');
+      avatar.classList.add('speaking-flap');
+    }
+    if (sidebarAvatar) {
+      sidebarAvatar.classList.remove('thinking-nod');
+      sidebarAvatar.classList.add('speaking-flap');
+    }
+    
     typewriterInterval = setInterval(() => {
       if (typewriterQueue.length === 0) {
-        clearInterval(typewriterInterval);
-        typewriterInterval = null;
+        if (!isStreamActive) {
+          clearInterval(typewriterInterval);
+          typewriterInterval = null;
+          
+          if (avatar) avatar.classList.remove('speaking-flap');
+          if (sidebarAvatar) sidebarAvatar.classList.remove('speaking-flap');
+          isDuoSpeaking = false;
+          
+          const chatInput = document.getElementById('duo-chat-input');
+          const chatSubmit = document.getElementById('duo-chat-submit');
+          if (chatInput) chatInput.disabled = false;
+          if (chatSubmit) chatSubmit.disabled = false;
+        }
         return;
       }
       
@@ -2683,6 +2766,52 @@ function startDuoGuiltTripSimulation() {
   }, 75000);
 }
 
+function toggleDuoChatInput() {
+  const chatContainer = document.getElementById('duo-chat-container');
+  if (!chatContainer) return;
+  
+  const isHidden = chatContainer.classList.contains('hidden');
+  if (isHidden) {
+    chatContainer.classList.remove('hidden');
+    const inputEl = document.getElementById('duo-chat-input');
+    const submitEl = document.getElementById('duo-chat-submit');
+    if (inputEl) {
+      inputEl.value = '';
+      inputEl.disabled = false;
+      inputEl.focus();
+    }
+    if (submitEl) {
+      submitEl.disabled = false;
+    }
+    // If quiet, trigger manual guilt trip to show he is active
+    const bubble = document.getElementById('floating-duo-bubble');
+    if (!isDuoSpeaking && (!bubble || bubble.style.display === 'none')) {
+      triggerManualGuiltTrip({ force: true });
+    }
+  } else {
+    chatContainer.classList.add('hidden');
+  }
+}
+
+function handleDuoChatKeydown(e) {
+  if (e.key === 'Enter') {
+    submitDuoChat();
+  }
+}
+
+function submitDuoChat() {
+  const inputEl = document.getElementById('duo-chat-input');
+  if (!inputEl) return;
+  
+  const msg = inputEl.value.trim();
+  if (!msg) return;
+  
+  inputEl.value = '';
+  inputEl.focus();
+  
+  triggerManualGuiltTrip({ userMessage: msg });
+}
+
 function initDraggableMascot() {
   const widget = document.getElementById('floating-duo-widget');
   const avatar = widget.querySelector('.floating-avatar-container');
@@ -2705,13 +2834,8 @@ function initDraggableMascot() {
     const rect = widget.getBoundingClientRect();
     const desktopRect = desktop.getBoundingClientRect();
     
-    widget.style.bottom = 'auto';
-    widget.style.right = 'auto';
-    widget.style.left = `${rect.left - desktopRect.left}px`;
-    widget.style.top = `${rect.top - desktopRect.top}px`;
-    
-    offsetX = e.clientX - parseInt(widget.style.left);
-    offsetY = e.clientY - parseInt(widget.style.top);
+    offsetX = e.clientX - (rect.left - desktopRect.left);
+    offsetY = e.clientY - (rect.top - desktopRect.top);
     
     audio.playHddClick();
     
@@ -2724,25 +2848,35 @@ function initDraggableMascot() {
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
     if (Math.hypot(dx, dy) > 5) {
-      hasMoved = true;
+      if (!hasMoved) {
+        hasMoved = true;
+        const rect = widget.getBoundingClientRect();
+        const desktopRect = desktop.getBoundingClientRect();
+        widget.style.bottom = 'auto';
+        widget.style.right = 'auto';
+        widget.style.left = `${rect.left - desktopRect.left}px`;
+        widget.style.top = `${rect.top - desktopRect.top}px`;
+      }
     }
     
-    let newLeft = e.clientX - offsetX;
-    let newTop = e.clientY - offsetY;
-    
-    const desktopRect = desktop.getBoundingClientRect();
-    const widgetRect = widget.getBoundingClientRect();
-    
-    const maxLeft = desktopRect.width - widgetRect.width;
-    const maxTop = desktopRect.height - widgetRect.height;
-    
-    if (newLeft < 0) newLeft = 0;
-    if (newLeft > maxLeft) newLeft = maxLeft;
-    if (newTop < 0) newTop = 0;
-    if (newTop > maxTop) newTop = maxTop;
-    
-    widget.style.left = `${newLeft}px`;
-    widget.style.top = `${newTop}px`;
+    if (hasMoved) {
+      let newLeft = e.clientX - offsetX;
+      let newTop = e.clientY - offsetY;
+      
+      const desktopRect = desktop.getBoundingClientRect();
+      const widgetRect = widget.getBoundingClientRect();
+      
+      const maxLeft = desktopRect.width - widgetRect.width;
+      const maxTop = desktopRect.height - widgetRect.height;
+      
+      if (newLeft < 0) newLeft = 0;
+      if (newLeft > maxLeft) newLeft = maxLeft;
+      if (newTop < 0) newTop = 0;
+      if (newTop > maxTop) newTop = maxTop;
+      
+      widget.style.left = `${newLeft}px`;
+      widget.style.top = `${newTop}px`;
+    }
   });
   
   document.addEventListener('mouseup', (e) => {
@@ -2750,7 +2884,7 @@ function initDraggableMascot() {
     isDragging = false;
     
     if (!hasMoved) {
-      triggerManualGuiltTrip();
+      toggleDuoChatInput();
     }
   });
 }
