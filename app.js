@@ -2528,6 +2528,8 @@ function saveSettingsWizard() {
 let isDuoSpeaking = false;
 let isStreamActive = false;
 let completedQuizzesCount = 0;
+let typewriterQueue = [];
+let typewriterInterval = null;
 
 function clearTypewriter() {
   if (typewriterInterval) {
@@ -2699,8 +2701,7 @@ function triggerManualGuiltTrip(options = {}) {
     });
 }
 
-let typewriterQueue = [];
-let typewriterInterval = null;
+
 
 function typewriteText(text, targetEls) {
   for (const char of text) {
