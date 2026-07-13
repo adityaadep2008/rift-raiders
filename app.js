@@ -670,6 +670,11 @@ function resetDatabaseState() {
 // 3. UI Application Logic (Desktop window drag, minimize, maximize)
 // ==========================================================================
 let isBooted = false;
+let systemTrayTimeInterval = null;
+let buddyMessengerInterval = null;
+let duoGuiltTripInterval = null;
+let duoGuiltTripTimeout = null;
+
 function startSystemBoot() {
   if (isBooted) return;
   isBooted = true;
@@ -720,6 +725,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function initSystemTrayTime() {
+  if (systemTrayTimeInterval) clearInterval(systemTrayTimeInterval);
   const updateTime = () => {
     const timeEl = document.getElementById('system-time');
     if (timeEl) {
@@ -728,7 +734,7 @@ function initSystemTrayTime() {
     }
   };
   updateTime();
-  setInterval(updateTime, 60000);
+  systemTrayTimeInterval = setInterval(updateTime, 60000);
 }
 
 // Window Dragging logic
@@ -804,6 +810,7 @@ function toggleServerLogs() {
 // Switch tabs inside Duo App
 function switchTab(tabId) {
   audio.init();
+  openDuoApp();
   runQuery(`SELECT * FROM bbs_posts JOIN user_profiles JOIN course_progress WHERE tab='${tabId}';`, () => {
     const tabs = ['tab-tree', 'tab-bbs', 'tab-shop'];
     tabs.forEach(t => {
@@ -818,6 +825,116 @@ function switchTab(tabId) {
       renderBBSLeaderboard();
     }
   });
+}
+
+function shutdownSystem() {
+  audio.init();
+  audio.playHddClick();
+  
+  // Stop background music and reset it
+  if (audio.bgMusicRunning && audio.bgAudio) {
+    audio.bgAudio.pause();
+    audio.bgAudio.currentTime = 0;
+  }
+  audio.bgMusicRunning = false;
+  
+  // Clear all background simulation timers/intervals
+  if (systemTrayTimeInterval) {
+    clearInterval(systemTrayTimeInterval);
+    systemTrayTimeInterval = null;
+  }
+  if (buddyMessengerInterval) {
+    clearInterval(buddyMessengerInterval);
+    buddyMessengerInterval = null;
+  }
+  if (duoGuiltTripInterval) {
+    clearInterval(duoGuiltTripInterval);
+    duoGuiltTripInterval = null;
+  }
+  if (duoGuiltTripTimeout) {
+    clearTimeout(duoGuiltTripTimeout);
+    duoGuiltTripTimeout = null;
+  }
+  
+  // Stop typewriter animation
+  clearTypewriter();
+  isDuoSpeaking = false;
+  
+  // Close any active app windows, tooltips, dialogs
+  const win = document.getElementById('duo-window');
+  if (win) {
+    win.classList.add('hidden');
+    win.classList.remove('window-active');
+  }
+  
+  const taskTab = document.getElementById('task-tab-duo');
+  if (taskTab) {
+    taskTab.classList.remove('active');
+  }
+  
+  // Hide settings overlay
+  const settingsOverlay = document.getElementById('settings-wizard-overlay');
+  if (settingsOverlay) {
+    settingsOverlay.classList.add('hidden');
+  }
+  
+  // Hide course customization wizard
+  const hobbyOverlay = document.getElementById('hobby-wizard-overlay');
+  if (hobbyOverlay) {
+    hobbyOverlay.classList.add('hidden');
+  }
+  
+  // Hide active lesson overlays
+  const lessonOverlay = document.getElementById('lesson-overlay');
+  if (lessonOverlay) {
+    lessonOverlay.classList.add('hidden');
+  }
+  
+  // Hide MSN toaster
+  const toaster = document.getElementById('msn-toaster');
+  if (toaster) {
+    toaster.classList.remove('show');
+  }
+  
+  // Hide logs drawer
+  const logsDrawer = document.getElementById('server-logs-drawer');
+  if (logsDrawer) {
+    logsDrawer.classList.add('hidden');
+  }
+  
+  // Hide start menu
+  const startMenu = document.getElementById('start-menu');
+  if (startMenu) {
+    startMenu.classList.add('hidden');
+  }
+  
+  // Reset the boot screen and status message
+  const statusEl = document.getElementById('boot-status');
+  if (statusEl) {
+    statusEl.innerText = "[ CLICK HERE OR PRESS ANY KEY TO BOOT SYSTEM ]";
+    statusEl.style.color = "#39ff14";
+    statusEl.style.animation = "combo-blink 0.8s infinite alternate";
+  }
+  
+  const loaderEl = document.getElementById('boot-loader');
+  if (loaderEl) {
+    loaderEl.classList.add('hidden');
+  }
+  
+  // Show boot screen and hide desktop
+  const bootScreen = document.getElementById('boot-screen');
+  if (bootScreen) {
+    bootScreen.classList.remove('hidden');
+  }
+  const desktop = document.getElementById('desktop');
+  if (desktop) {
+    desktop.classList.add('hidden');
+  }
+  
+  // Reset boot status flag so user can boot again
+  isBooted = false;
+  
+  logToConsole("[SYSTEM] Shutting down operating system...");
 }
 
 // Windows Start Menu Mock toggle
@@ -2466,7 +2583,8 @@ const buddyAlerts = [
 ];
 
 function startBuddyMessengerSimulation() {
-  setInterval(() => {
+  if (buddyMessengerInterval) clearInterval(buddyMessengerInterval);
+  buddyMessengerInterval = setInterval(() => {
     const isLessonActive = !document.getElementById('lesson-overlay').classList.contains('hidden');
     if (!isLessonActive) {
       const idx = Math.floor(Math.random() * buddyAlerts.length);
@@ -2842,11 +2960,13 @@ function typewriteText(text, targetEls) {
 }
 
 function startDuoGuiltTripSimulation() {
-  setTimeout(() => {
+  if (duoGuiltTripInterval) clearInterval(duoGuiltTripInterval);
+  if (duoGuiltTripTimeout) clearTimeout(duoGuiltTripTimeout);
+  duoGuiltTripTimeout = setTimeout(() => {
     triggerManualGuiltTrip();
   }, 10000);
   
-  setInterval(() => {
+  duoGuiltTripInterval = setInterval(() => {
     const isLessonActive = !document.getElementById('lesson-overlay').classList.contains('hidden');
     if (!isLessonActive && !isDuoSpeaking) {
       logToConsole(`[PHP] Passive-aggressive trigger: Duo is checking user activity...`);
