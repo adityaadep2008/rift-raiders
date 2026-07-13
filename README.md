@@ -10,12 +10,9 @@ The project runs completely in-memory using vanilla HTML, CSS, and JavaScript.
 
 To run the application locally:
 
-1. **Open a terminal** and navigate to this workspace folder:
-   ```bash
-   cd /Users/rtsws/Documents/Github/rift-raiders
-   ```
+1. **Open a terminal** and navigate to the project folder.
 2. **Start the Backend Server**:
-   Since the app runs on a Python/Node.js API handler to manage unified payload routing and CORS settings, launch the custom Python server:
+   Since the app runs on a Python server to serve static assets and manage unified payload routing for the AI orchestrator, launch the server:
    ```bash
    python3 server.py
    ```
@@ -46,7 +43,28 @@ To run the application locally:
 
 ### 4. Aero Brutalist Aesthetics & Custom Wallpaper
 - Fuses animated, glossy windows (Frutinger Aero) with heavy solid outlines, blocky offsets, and monospace typography (Techno Brutalism).
-- Includes floating animated glass bubbles and a **cybernetic metallic spike wallpaper** (`wallpaper.png`) in the background of the monitor.
+- Includes floating animated glass bubbles and a **cybernetic metallic spike wallpaper** (`assets/wallpaper.png`) in the background of the monitor.
+
+### 5. Interactive Desktop Mascot (Duo Assistant)
+- Duo floats on your desktop in a Clippy-style widget.
+- You can drag him anywhere. He automatically bounds to the screen edges, and his dialogue boxes dynamically reposition to prevent him from clipping off-screen.
+- Click on him to open a text chat box to converse directly with him using the configured local or cloud LLM.
+- **Dynamic Hints**: Stuck on a question? Click **💡 Get Hint** in any exercise footer. Duo will analyze the exercise and give you a sassy, contextual clue (costing 0.5 hearts, plus 1 Lingot for subsequent hints).
+
+### 6. Lingot Storefront Catalog
+- Earn **Lingots** by completing quizzes and practice sessions.
+- Spend them in the **Lingot Storefront** (accessible via the taskbar or desktop icon) to purchase befitting early-2000s items:
+  - **Streak Freeze** (10 Lingots): Preserves your current streak if you miss a day of practice.
+  - **Duo Tracksuit Skin** (5 Lingots): Equips Duo the Owl with a generic blue and gold 2000s tracksuit skin and updates his dialog presentation.
+
+### 7. MSN Messenger-style Buddy List & Toaster Alerts
+- A sidebar widget showing your MSN Messenger "buddy list" contacts (like `xX_SpanishPro_Xx` and `Learner_2006`).
+- Real-time Leaderboard updates as you and your mock buddies earn XP.
+- Pop-up toaster notifications slide up from the system tray with custom sound effects to guilt-trip you or celebrate buddy achievements.
+
+### 8. Course Customization Wizard (Hobby Selection)
+- On first boot, the user is greeted by a Windows-style setup wizard.
+- Customize your course by choosing a primary hobby (e.g., Golf, Gaming, Cooking, Gardening, etc.), which dynamically loads a custom 10th skill node filled with tailored vocabulary exercises.
 
 ## 🤖 AI Orchestrator & Local LLM Setup
 
@@ -109,7 +127,7 @@ To run inference completely locally without paying for API keys, follow these in
 
 ### Cheat Codes (For testing without Spanish knowledge)
 - **Unlock All Skills**: Click the red **Unlock All Skills** button in the window menubar to immediately bypass progression locks and populate vocabulary caches.
-- **Reveal Answer**: Click the **Reveal Answer (Duo Hint)** link inside exercise footers to instantly solve any Drag-and-Drop slots, Pair Matrix pairs, Mic checks, or translation fields.
+- **Dev Bypass**: Click the **Dev Bypass** button inside exercise footers to instantly solve any Drag-and-Drop slots, Pair Matrix pairs, Mic checks, or translation fields.
 
 ### Backend console drawer & Diagnostic logs
 - Toggle the **Server Logs Drawer** via the taskbar or Start menu to view mock PHP session handshakes and MySQL transactions.
