@@ -2117,7 +2117,6 @@ body {
   width: 180px; /* Locked width to prevent layout shifts */
   position: absolute; /* Floating above the avatar */
   bottom: 100%;
-  right: 0;
   margin-bottom: 8px;
   box-shadow: 2px 2px 0px rgba(0,0,0,0.6) !important;
   font-family: Tahoma, Arial, sans-serif !important;
@@ -2129,21 +2128,58 @@ body {
   display: none; /* Hidden unless speaking */
 }
 
-/* Sharp corner indicator pointing directly at avatar (bottom right tail) */
-.floating-speech-bubble::before {
+/* Alignments and tails depending on left/right positioning */
+.floating-duo-widget.align-left {
+  align-items: flex-start;
+}
+.floating-duo-widget.align-left .floating-speech-bubble {
+  left: 0;
+  right: auto;
+}
+.floating-duo-widget.align-left .floating-speech-bubble::before {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 25px;
+  right: auto;
+  border-width: 6px 0 0 6px;
+  border-style: solid;
+  border-color: #000000 transparent transparent transparent;
+}
+.floating-duo-widget.align-left .floating-speech-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 26px;
+  right: auto;
+  border-width: 5px 0 0 5px;
+  border-style: solid;
+  border-color: #FFFFCC transparent transparent transparent;
+}
+
+.floating-duo-widget.align-right {
+  align-items: flex-end;
+}
+.floating-duo-widget.align-right .floating-speech-bubble {
+  right: 0;
+  left: auto;
+}
+.floating-duo-widget.align-right .floating-speech-bubble::before {
   content: "";
   position: absolute;
   bottom: -6px;
   right: 25px;
+  left: auto;
   border-width: 6px 6px 0 0;
   border-style: solid;
   border-color: #000000 transparent transparent transparent;
 }
-.floating-speech-bubble::after {
+.floating-duo-widget.align-right .floating-speech-bubble::after {
   content: "";
   position: absolute;
   bottom: -4px;
   right: 26px;
+  left: auto;
   border-width: 5px 5px 0 0;
   border-style: solid;
   border-color: #FFFFCC transparent transparent transparent;

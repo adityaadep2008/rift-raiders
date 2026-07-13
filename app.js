@@ -2855,6 +2855,64 @@ function startDuoGuiltTripSimulation() {
   }, 75000);
 }
 
+function setMascotPosition(avatarLeft, avatarTop) {
+  const widget = document.getElementById('floating-duo-widget');
+  const chatContainer = document.getElementById('duo-chat-container');
+  const desktop = document.getElementById('desktop');
+  if (!widget || !desktop || !chatContainer) return;
+  
+  const desktopRect = desktop.getBoundingClientRect();
+  const isLeftHalf = (avatarLeft + 40) < desktopRect.width / 2;
+  const isChatVisible = !chatContainer.classList.contains('hidden');
+  const widgetWidth = isChatVisible ? 190 : 80;
+  
+  // Bounds
+  let minLeft, maxLeft;
+  if (isLeftHalf) {
+    minLeft = 0;
+    maxLeft = desktopRect.width - widgetWidth;
+  } else {
+    minLeft = widgetWidth - 80;
+    maxLeft = desktopRect.width - 80;
+  }
+  
+  if (avatarLeft < minLeft) avatarLeft = minLeft;
+  if (avatarLeft > maxLeft) avatarLeft = maxLeft;
+  
+  let minTop = 80; // Margin for speech bubble
+  let maxTop = desktopRect.height - 80 - 45; // Margin for taskbar at bottom
+  if (avatarTop < minTop) avatarTop = minTop;
+  if (avatarTop > maxTop) avatarTop = maxTop;
+  
+  if (isLeftHalf) {
+    widget.classList.add('align-left');
+    widget.classList.remove('align-right');
+    widget.style.left = `${avatarLeft}px`;
+  } else {
+    widget.classList.add('align-right');
+    widget.classList.remove('align-left');
+    widget.style.left = `${(avatarLeft + 80) - widgetWidth}px`;
+  }
+  widget.style.top = `${avatarTop}px`;
+  widget.style.bottom = 'auto';
+  widget.style.right = 'auto';
+}
+
+function updateMascotLayout() {
+  const widget = document.getElementById('floating-duo-widget');
+  const avatar = widget.querySelector('.floating-avatar-container');
+  const desktop = document.getElementById('desktop');
+  if (!widget || !avatar || !desktop) return;
+  
+  const avatarRect = avatar.getBoundingClientRect();
+  const desktopRect = desktop.getBoundingClientRect();
+  
+  const avatarLeft = avatarRect.left - desktopRect.left;
+  const avatarTop = avatarRect.top - desktopRect.top;
+  
+  setMascotPosition(avatarLeft, avatarTop);
+}
+
 function toggleDuoChatInput() {
   const chatContainer = document.getElementById('duo-chat-container');
   if (!chatContainer) return;
@@ -2880,6 +2938,7 @@ function toggleDuoChatInput() {
   } else {
     chatContainer.classList.add('hidden');
   }
+  updateMascotLayout();
 }
 
 function handleDuoChatKeydown(e) {
@@ -2905,6 +2964,7 @@ function initDraggableMascot() {
   const widget = document.getElementById('floating-duo-widget');
   const avatar = widget.querySelector('.floating-avatar-container');
   const desktop = document.getElementById('desktop');
+  const chatContainer = document.getElementById('duo-chat-container');
   
   let isDragging = false;
   let startX = 0;
@@ -2920,7 +2980,7 @@ function initDraggableMascot() {
     startX = e.clientX;
     startY = e.clientY;
     
-    const rect = widget.getBoundingClientRect();
+    const rect = avatar.getBoundingClientRect();
     const desktopRect = desktop.getBoundingClientRect();
     
     offsetX = e.clientX - (rect.left - desktopRect.left);
@@ -2937,34 +2997,13 @@ function initDraggableMascot() {
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
     if (Math.hypot(dx, dy) > 5) {
-      if (!hasMoved) {
-        hasMoved = true;
-        const rect = widget.getBoundingClientRect();
-        const desktopRect = desktop.getBoundingClientRect();
-        widget.style.bottom = 'auto';
-        widget.style.right = 'auto';
-        widget.style.left = `${rect.left - desktopRect.left}px`;
-        widget.style.top = `${rect.top - desktopRect.top}px`;
-      }
+      hasMoved = true;
     }
     
     if (hasMoved) {
-      let newLeft = e.clientX - offsetX;
-      let newTop = e.clientY - offsetY;
-      
-      const desktopRect = desktop.getBoundingClientRect();
-      const widgetRect = widget.getBoundingClientRect();
-      
-      const maxLeft = desktopRect.width - widgetRect.width;
-      const maxTop = desktopRect.height - widgetRect.height;
-      
-      if (newLeft < 0) newLeft = 0;
-      if (newLeft > maxLeft) newLeft = maxLeft;
-      if (newTop < 0) newTop = 0;
-      if (newTop > maxTop) newTop = maxTop;
-      
-      widget.style.left = `${newLeft}px`;
-      widget.style.top = `${newTop}px`;
+      const avatarLeft = e.clientX - offsetX;
+      const avatarTop = e.clientY - offsetY;
+      setMascotPosition(avatarLeft, avatarTop);
     }
   });
   
@@ -2976,4 +3015,13 @@ function initDraggableMascot() {
       toggleDuoChatInput();
     }
   });
+  
+  // Listen to window resizing to keep mascot bounds in screen
+  window.addEventListener('resize', () => {
+    updateMascotLayout();
+  });
+  
+  // Initialize positions and alignment immediately
+  updateMascotLayout();
 }
+
