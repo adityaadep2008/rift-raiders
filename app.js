@@ -53,7 +53,7 @@ class RetroAudioEngine {
     this.bgMusicRunning = true;
     
     if (!this.bgAudio) {
-      this.bgAudio = new Audio('backgroundsound.mp3');
+      this.bgAudio = new Audio('assets/backgroundsound.mp3');
       this.bgAudio.loop = true;
       this.bgAudio.volume = 0.25; // soft background music volume
     }
